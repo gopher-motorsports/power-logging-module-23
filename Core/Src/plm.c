@@ -26,14 +26,17 @@ void plm_store_data(void) {
     }
 
     if (sd_ready) {
-        uint8_t data[3] = {1, 2, 3};
-        err = plm_sd_write(data, 3);
+        uint8_t data1[3] = {1, 2, 3};
+        err = plm_sd_write(data1, 3);
         if (err) {
             // write failed
             plm_sd_deinit();
             sd_ready = 0;
         }
     }
+
+    uint8_t data2[3] = {1, 2, 3};
+    plm_xb_send(data2, 3);
 
     osDelay(1000);
 }
