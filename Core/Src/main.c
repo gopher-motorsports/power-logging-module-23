@@ -47,10 +47,10 @@ SD_HandleTypeDef hsd1;
 DMA_HandleTypeDef hdma_sdmmc1_rx;
 DMA_HandleTypeDef hdma_sdmmc1_tx;
 
-/* Definitions for StoreData_PLM */
-osThreadId_t StoreData_PLMHandle;
-const osThreadAttr_t StoreData_PLM_attributes = {
-  .name = "StoreData_PLM",
+/* Definitions for PLM_StoreData */
+osThreadId_t PLM_StoreDataHandle;
+const osThreadAttr_t PLM_StoreData_attributes = {
+  .name = "PLM_StoreData",
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
@@ -63,7 +63,7 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_SDMMC1_SD_Init(void);
 static void MX_DMA_Init(void);
-void StoreData(void *argument);
+void plm_task_store_data(void *argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -129,8 +129,8 @@ int main(void)
   /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */
-  /* creation of StoreData_PLM */
-  StoreData_PLMHandle = osThreadNew(StoreData, NULL, &StoreData_PLM_attributes);
+  /* creation of PLM_StoreData */
+  PLM_StoreDataHandle = osThreadNew(plm_task_store_data, NULL, &PLM_StoreData_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -167,7 +167,7 @@ void SystemClock_Config(void)
   /** Configure the main internal regulator output voltage
   */
   __HAL_RCC_PWR_CLK_ENABLE();
-  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE3);
+  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
 
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
@@ -177,11 +177,18 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLM = 4;
-  RCC_OscInitStruct.PLL.PLLN = 96;
-  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV4;
-  RCC_OscInitStruct.PLL.PLLQ = 4;
+  RCC_OscInitStruct.PLL.PLLN = 192;
+  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
+  RCC_OscInitStruct.PLL.PLLQ = 8;
   RCC_OscInitStruct.PLL.PLLR = 2;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Activate the Over-Drive mode
+  */
+  if (HAL_PWREx_EnableOverDrive() != HAL_OK)
   {
     Error_Handler();
   }
@@ -195,7 +202,7 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_6) != HAL_OK)
   {
     Error_Handler();
   }
@@ -293,14 +300,14 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE END 4 */
 
-/* USER CODE BEGIN Header_StoreData */
+/* USER CODE BEGIN Header_plm_task_store_data */
 /**
-  * @brief  Function implementing the StoreData_PLM thread.
+  * @brief  Function implementing the PLM_StoreData thread.
   * @param  argument: Not used
   * @retval None
   */
-/* USER CODE END Header_StoreData */
-void StoreData(void *argument)
+/* USER CODE END Header_plm_task_store_data */
+void plm_task_store_data(void *argument)
 {
   /* init code for USB_DEVICE */
   MX_USB_DEVICE_Init();

@@ -20,17 +20,17 @@ void plm_store_data(void) {
 
     if (!sd_ready) {
         // initialize SD card
-        err = sd_init();
-        if (err) sd_deinit();
+        err = plm_sd_init();
+        if (err) plm_sd_deinit();
         else sd_ready = 1;
     }
 
     if (sd_ready) {
         uint8_t data[3] = {1, 2, 3};
-        err = sd_write(data, 3);
+        err = plm_sd_write(data, 3);
         if (err) {
             // write failed
-            sd_deinit();
+            plm_sd_deinit();
             sd_ready = 0;
         }
     }
