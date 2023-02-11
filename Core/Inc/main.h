@@ -57,14 +57,22 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define BN1_Pin GPIO_PIN_13
-#define BN1_GPIO_Port GPIOC
 #define LD1_Pin GPIO_PIN_0
 #define LD1_GPIO_Port GPIOB
-#define LD3_Pin GPIO_PIN_14
-#define LD3_GPIO_Port GPIOB
 #define SDMMC1_CD_Pin GPIO_PIN_2
 #define SDMMC1_CD_GPIO_Port GPIOG
+#define LED0_Pin GPIO_PIN_4
+#define LED0_GPIO_Port GPIOG
+#define LED1_Pin GPIO_PIN_5
+#define LED1_GPIO_Port GPIOG
+#define LED2_Pin GPIO_PIN_6
+#define LED2_GPIO_Port GPIOG
+#define LED3_Pin GPIO_PIN_7
+#define LED3_GPIO_Port GPIOG
+#define LED4_Pin GPIO_PIN_8
+#define LED4_GPIO_Port GPIOG
+#define LED5_Pin GPIO_PIN_9
+#define LED5_GPIO_Port GPIOG
 #define LD2_Pin GPIO_PIN_7
 #define LD2_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */

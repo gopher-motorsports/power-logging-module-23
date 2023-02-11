@@ -11,6 +11,8 @@
 #include "plm_sd.h"
 #include "main.h"
 
+//extern UART_HandleTypeDef huart1;
+
 void plm_init(void) {
 }
 
@@ -35,8 +37,11 @@ void plm_store_data(void) {
         }
     }
 
-    uint8_t data2[3] = {1, 2, 3};
-    plm_xb_send(data2, 3);
+//    uint8_t data2[3] = {1, 2, 3};
+//    plm_xb_send(data2, 3);
+
+//    uint8_t data3[5] = {'h', 'e', 'l', 'l', 'o'};
+//    HAL_UART_Transmit_DMA(&huart1, data3, 5);
 
     osDelay(1000);
 }
