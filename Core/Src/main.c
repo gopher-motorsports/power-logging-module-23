@@ -25,9 +25,11 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "plm.h"
+#include "over_current_protection.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
+typedef StaticTask_t osStaticThreadDef_t;
 /* USER CODE BEGIN PTD */
 
 /* USER CODE END PTD */
@@ -58,6 +60,18 @@ const osThreadAttr_t PLM_StoreData_attributes = {
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
+/* Definitions for overCurrentProt */
+osThreadId_t overCurrentProtHandle;
+uint32_t overCurrentProtBuffer[ 512 ];
+osStaticThreadDef_t overCurrentProtControlBlock;
+const osThreadAttr_t overCurrentProt_attributes = {
+  .name = "overCurrentProt",
+  .cb_mem = &overCurrentProtControlBlock,
+  .cb_size = sizeof(overCurrentProtControlBlock),
+  .stack_mem = &overCurrentProtBuffer[0],
+  .stack_size = sizeof(overCurrentProtBuffer),
+  .priority = (osPriority_t) osPriorityBelowNormal,
+};
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -70,6 +84,7 @@ static void MX_DMA_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_CAN1_Init(void);
 void plm_task_store_data(void *argument);
+void over_current_protection_entry(void *argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -139,6 +154,9 @@ int main(void)
   /* Create the thread(s) */
   /* creation of PLM_StoreData */
   PLM_StoreDataHandle = osThreadNew(plm_task_store_data, NULL, &PLM_StoreData_attributes);
+
+  /* creation of overCurrentProt */
+  overCurrentProtHandle = osThreadNew(over_current_protection_entry, NULL, &overCurrentProt_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -410,6 +428,25 @@ void plm_task_store_data(void *argument)
     plm_store_data();
   }
   /* USER CODE END 5 */
+}
+
+/* USER CODE BEGIN Header_over_current_protection_entry */
+/**
+* @brief Function implementing the overCurrentProt thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_over_current_protection_entry */
+void over_current_protection_entry(void *argument)
+{
+  /* USER CODE BEGIN over_current_protection_entry */
+	over_current_protection();
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END over_current_protection_entry */
 }
 
 /**

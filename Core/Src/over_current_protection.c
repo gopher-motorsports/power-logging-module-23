@@ -1,66 +1,59 @@
 #include <stdint.h>
 #include <stdio.h>
-#include <stdbool.h>
 #include "main.h"
+#include "over_current_protection.h"
+//include GopherCan.h cause it has all networks and buffers, also has TRUE and FALSE defined
 #include "GopherCAN.h"
-
-
-
-typedef struct {
-
-  uint32_t currentTime;
-  uint32_t timeFromlastCalculation;
-
-  uint32_t tripTimeStart;
-  uint32_t trippedTimeResetThreshold;
-  bool tripped;
-
-  float currentMax;
-  float amperageSecondsLimit;
-  float amperageRightNow;
-  float amperageSecondsSum;
-
-  uint8_t powerSwitchPin;
-  uint8_t powerSwitchPort;
-
-} plmChannel;
+#include "cmsis_os.h"
 
 //could add up differences from orignal timer in that period
-//room for opromiation and readability
+//room for optomization and readability
 
 void isOverCurrentLimit(plmChannel *inputChan){
     inputChan -> currentTime = HAL_GetTick();
+    inputChan -> amperageRightNowAdjusted = inputChan -> amperageRightNow - inputChan -> currentMax;
     uint32_t changeInTime = (inputChan -> currentTime)-(inputChan -> timeFromlastCalculation);
 
-    inputChan -> amperageSecondsSum += inputChan -> amperageRightNow * changeInTime;
+    inputChan -> amperageSecondsSum += inputChan -> amperageRightNowAdjusted * changeInTime;
 
     inputChan -> timeFromlastCalculation = inputChan -> currentTime;
-    if((inputChan -> amperageSecondsSum > inputChan -> amperageSecondsLimit) && !inputChan -> tripped){
-        inputChan -> powerSwitchPin = 0;
-        inputChan -> tripTimeStart = inputChan -> timeFromlastCalculation;
-        inputChan -> tripped = TRUE;
+
+    //makes sure ampSecondsSum doesn't go below 0
+    if(inputChan -> amperageSecondsSum <= 0){
+    	inputChan -> amperageSecondsSum = 0;
     }
 
+    else{
+		//if integral is greater than threshold and has not yet past threshold
+    	if((inputChan -> amperageSecondsSum > inputChan -> amperageSecondsLimit) && !inputChan -> tripped){
+			inputChan -> powerSwitchPin = 0;
+			inputChan -> tripTimeStart = inputChan -> timeFromlastCalculation;
+			inputChan -> tripped = TRUE;
+		}
+    	//if it has past the amp second threshold, wait reset threshold before setting back to zero
+    	else if((inputChan -> tripped == TRUE)){
+			uint32_t trippedDuration = (inputChan -> currentTime)-(inputChan -> tripTimeStart);
 
-    if((inputChan -> tripped == TRUE)){
-    	uint32_t trippedDuration = (inputChan -> currentTime)-(inputChan -> tripTimeStart);
+			if(trippedDuration > inputChan -> trippedTimeResetThreshold){
+				inputChan -> amperageSecondsSum = 0;
+				inputChan -> powerSwitchPin = 1;
+				inputChan -> tripped = FALSE;
 
-    	if(trippedDuration > inputChan -> trippedTimeResetThreshold){
-    		inputChan -> amperageSecondsSum = 0;
-    		inputChan -> tripped = FALSE;
-
-    	}
+			}
+		}
     }
-
 }
 
 
 int over_current_protection()
 {
-    //Vbat = 10V, fiveV = 5V
+    //fiveV = 5V
     plmChannel vbat_chan0 = {0};
     vbat_chan0.currentMax = 10.0;
     vbat_chan0.powerSwitchPin = 1;
+    //test values:
+   /* vbat_chan0.trippedTimeResetThreshold = 5000;
+	vbat_chan0.amperageSecondsLimit = 3000;*/
 
     plmChannel vbat_chan1 = {0};
     vbat_chan1.currentMax = 10.0;
@@ -106,7 +99,7 @@ int over_current_protection()
 
     while(1){
 		vbat_chan0.amperageRightNow = vbatChan0Current_A.data;
-		vbat_chan1.amperageRightNow = vbatChan1Current_A.data;
+		/*vbat_chan1.amperageRightNow = vbatChan1Current_A.data;
 		vbat_chan2.amperageRightNow = vbatChan2Current_A.data;
 		vbat_chan3.amperageRightNow = vbatChan3Current_A.data;
 		vbat_chan4.amperageRightNow = vbatChan4Current_A.data;
@@ -116,26 +109,26 @@ int over_current_protection()
 		fiveV_chan0.amperageRightNow = fiveVChan0Current_A.data;
 		fiveV_chan1.amperageRightNow = fiveVChan1Current_A.data;
 		fiveV_chan2.amperageRightNow = fiveVChan2Current_A.data;
-		fiveV_chan3.amperageRightNow = fiveVChan3Current_A.data;
+		fiveV_chan3.amperageRightNow = fiveVChan3Current_A.data;*/
 
 
 
 
 		isOverCurrentLimit(&vbat_chan0);
-		isOverCurrentLimit(&vbat_chan1);
+		/*isOverCurrentLimit(&vbat_chan1);
 		isOverCurrentLimit(&vbat_chan2);
 		isOverCurrentLimit(&vbat_chan3);
 		isOverCurrentLimit(&vbat_chan4);
 		isOverCurrentLimit(&vbat_chan5);
-		isOverCurrentLimit(&vbat_chan6);
+		isOverCurrentLimit(&vbat_chan6);*/
 
 
-		isOverCurrentLimit(&fiveV_chan0);
+		/*isOverCurrentLimit(&fiveV_chan0);
 		isOverCurrentLimit(&fiveV_chan1);
 		isOverCurrentLimit(&fiveV_chan2);
-		isOverCurrentLimit(&fiveV_chan3);
+		isOverCurrentLimit(&fiveV_chan3);*/
 
-
+		osDelay(1);
     }
     //printf("%d",vbat_chan0.powerSwitchPin);
     return 0;
