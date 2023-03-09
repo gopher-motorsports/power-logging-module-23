@@ -6,14 +6,30 @@
  */
 
 #include <stdint.h>
+#include <stdio.h>
 #include "plm.h"
 #include "cmsis_os.h"
 #include "plm_sd.h"
 #include "main.h"
+#include "GopherCAN.h"
 
-//extern UART_HandleTypeDef huart1;
+extern CAN_HandleTypeDef hcan1;
+extern CAN_HandleTypeDef hcan2;
+extern CAN_HandleTypeDef hcan3;
 
 void plm_init(void) {
+//    S8 err = init_can(GCAN0, &hcan1, PLM_ID, BXTYPE_MASTER);
+//    err &= init_can(GCAN1, &hcan2, PLM_ID, BXTYPE_MASTER);
+//    err &= init_can(GCAN2, &hcan3, PLM_ID, BXTYPE_MASTER);
+}
+
+void plm_service_can(void) {
+//    service_can_tx(&hcan1);
+//    service_can_tx(&hcan2);
+//    service_can_tx(&hcan3);
+//    service_can_rx_buffer();
+
+    osDelay(1);
 }
 
 void plm_store_data(void) {
@@ -37,11 +53,12 @@ void plm_store_data(void) {
         }
     }
 
-//    uint8_t data2[3] = {1, 2, 3};
-//    plm_xb_send(data2, 3);
-
-//    uint8_t data3[5] = {'h', 'e', 'l', 'l', 'o'};
-//    HAL_UART_Transmit_DMA(&huart1, data3, 5);
-
     osDelay(1000);
+}
+
+void plm_transmit_data(void) {
+//    uint8_t msg[3] = {1, 2, 3};
+//    plm_xb_send(data2, 3);
+    printf("testing...\n");
+    osDelay(5000);
 }

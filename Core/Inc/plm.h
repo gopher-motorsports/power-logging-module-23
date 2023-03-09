@@ -9,6 +9,7 @@
 #define INC_PLM_H_
 
 void plm_init(void);
+void plm_service_can(void);
 void plm_store_data(void);
 void plm_transmit_data(void);
 

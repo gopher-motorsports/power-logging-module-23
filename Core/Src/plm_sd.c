@@ -12,8 +12,8 @@ uint8_t plm_sd_init(void) {
     FRESULT res;
 
     // check if the SD card is inserted (0)
-//    uint8_t sd_in = !HAL_GPIO_ReadPin(SDMMC1_CD_GPIO_Port, SDMMC1_CD_Pin);
-//    if (!sd_in) return 1;
+    uint8_t sd_in = !HAL_GPIO_ReadPin(SDMMC1_CD_GPIO_Port, SDMMC1_CD_Pin);
+    if (!sd_in) return 1;
 
     // mount
     res = f_mount(&SDFatFS, SDPath, 1);

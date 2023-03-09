@@ -24,6 +24,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <stdio.h>
 #include "plm.h"
 /* USER CODE END Includes */
 
@@ -42,6 +43,9 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+CAN_HandleTypeDef hcan1;
+CAN_HandleTypeDef hcan2;
+CAN_HandleTypeDef hcan3;
 
 SD_HandleTypeDef hsd1;
 DMA_HandleTypeDef hdma_sdmmc1_rx;
@@ -49,17 +53,14 @@ DMA_HandleTypeDef hdma_sdmmc1_tx;
 
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
+UART_HandleTypeDef huart3;
 DMA_HandleTypeDef hdma_usart1_rx;
 DMA_HandleTypeDef hdma_usart1_tx;
 DMA_HandleTypeDef hdma_usart2_tx;
 
-/* Definitions for PLM_StoreData */
-osThreadId_t PLM_StoreDataHandle;
-const osThreadAttr_t PLM_StoreData_attributes = {
-  .name = "PLM_StoreData",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityNormal,
-};
+osThreadId PLM_StoreDataHandle;
+osThreadId PLM_ServiceCANHandle;
+osThreadId PLM_TransmitDatHandle;
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -71,10 +72,28 @@ static void MX_SDMMC1_SD_Init(void);
 static void MX_DMA_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_USART1_UART_Init(void);
-void plm_task_store_data(void *argument);
+static void MX_CAN1_Init(void);
+static void MX_CAN2_Init(void);
+static void MX_CAN3_Init(void);
+static void MX_USART3_UART_Init(void);
+void plm_task_store_data(void const * argument);
+void plm_task_service_can(void const * argument);
+void plm_task_transmit_data(void const * argument);
 
 /* USER CODE BEGIN PFP */
+// redirect printf to USART3
+// NOTE: output gets flushed at newline \n
+#ifdef __GNUC__
+#define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
+#else
+#define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
+#endif
 
+PUTCHAR_PROTOTYPE
+{
+  HAL_UART_Transmit(&huart3, (uint8_t*)&ch, 1, HAL_MAX_DELAY);
+  return ch;
+}
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -110,17 +129,18 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_DMA_Init();
   MX_SDMMC1_SD_Init();
+  MX_DMA_Init();
   MX_FATFS_Init();
   MX_USART2_UART_Init();
   MX_USART1_UART_Init();
+  MX_CAN1_Init();
+  MX_CAN2_Init();
+  MX_CAN3_Init();
+  MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
   plm_init();
   /* USER CODE END 2 */
-
-  /* Init scheduler */
-  osKernelInitialize();
 
   /* USER CODE BEGIN RTOS_MUTEX */
   /* add mutexes, ... */
@@ -139,16 +159,21 @@ int main(void)
   /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */
-  /* creation of PLM_StoreData */
-  PLM_StoreDataHandle = osThreadNew(plm_task_store_data, NULL, &PLM_StoreData_attributes);
+  /* definition and creation of PLM_StoreData */
+  osThreadDef(PLM_StoreData, plm_task_store_data, osPriorityNormal, 0, 512);
+  PLM_StoreDataHandle = osThreadCreate(osThread(PLM_StoreData), NULL);
+
+  /* definition and creation of PLM_ServiceCAN */
+  osThreadDef(PLM_ServiceCAN, plm_task_service_can, osPriorityNormal, 0, 512);
+  PLM_ServiceCANHandle = osThreadCreate(osThread(PLM_ServiceCAN), NULL);
+
+  /* definition and creation of PLM_TransmitDat */
+  osThreadDef(PLM_TransmitDat, plm_task_transmit_data, osPriorityNormal, 0, 512);
+  PLM_TransmitDatHandle = osThreadCreate(osThread(PLM_TransmitDat), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   /* USER CODE END RTOS_THREADS */
-
-  /* USER CODE BEGIN RTOS_EVENTS */
-  /* add events, ... */
-  /* USER CODE END RTOS_EVENTS */
 
   /* Start scheduler */
   osKernelStart();
@@ -186,7 +211,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.HSEState = RCC_HSE_BYPASS;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-  RCC_OscInitStruct.PLL.PLLM = 12;
+  RCC_OscInitStruct.PLL.PLLM = 4;
   RCC_OscInitStruct.PLL.PLLN = 192;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
   RCC_OscInitStruct.PLL.PLLQ = 8;
@@ -216,6 +241,117 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+}
+
+/**
+  * @brief CAN1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_CAN1_Init(void)
+{
+
+  /* USER CODE BEGIN CAN1_Init 0 */
+
+  /* USER CODE END CAN1_Init 0 */
+
+  /* USER CODE BEGIN CAN1_Init 1 */
+
+  /* USER CODE END CAN1_Init 1 */
+  hcan1.Instance = CAN1;
+  hcan1.Init.Prescaler = 6;
+  hcan1.Init.Mode = CAN_MODE_LOOPBACK;
+  hcan1.Init.SyncJumpWidth = CAN_SJW_1TQ;
+  hcan1.Init.TimeSeg1 = CAN_BS1_6TQ;
+  hcan1.Init.TimeSeg2 = CAN_BS2_1TQ;
+  hcan1.Init.TimeTriggeredMode = DISABLE;
+  hcan1.Init.AutoBusOff = ENABLE;
+  hcan1.Init.AutoWakeUp = ENABLE;
+  hcan1.Init.AutoRetransmission = DISABLE;
+  hcan1.Init.ReceiveFifoLocked = DISABLE;
+  hcan1.Init.TransmitFifoPriority = DISABLE;
+  if (HAL_CAN_Init(&hcan1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN CAN1_Init 2 */
+
+  /* USER CODE END CAN1_Init 2 */
+
+}
+
+/**
+  * @brief CAN2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_CAN2_Init(void)
+{
+
+  /* USER CODE BEGIN CAN2_Init 0 */
+
+  /* USER CODE END CAN2_Init 0 */
+
+  /* USER CODE BEGIN CAN2_Init 1 */
+
+  /* USER CODE END CAN2_Init 1 */
+  hcan2.Instance = CAN2;
+  hcan2.Init.Prescaler = 6;
+  hcan2.Init.Mode = CAN_MODE_LOOPBACK;
+  hcan2.Init.SyncJumpWidth = CAN_SJW_1TQ;
+  hcan2.Init.TimeSeg1 = CAN_BS1_6TQ;
+  hcan2.Init.TimeSeg2 = CAN_BS2_1TQ;
+  hcan2.Init.TimeTriggeredMode = DISABLE;
+  hcan2.Init.AutoBusOff = ENABLE;
+  hcan2.Init.AutoWakeUp = ENABLE;
+  hcan2.Init.AutoRetransmission = DISABLE;
+  hcan2.Init.ReceiveFifoLocked = DISABLE;
+  hcan2.Init.TransmitFifoPriority = DISABLE;
+  if (HAL_CAN_Init(&hcan2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN CAN2_Init 2 */
+
+  /* USER CODE END CAN2_Init 2 */
+
+}
+
+/**
+  * @brief CAN3 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_CAN3_Init(void)
+{
+
+  /* USER CODE BEGIN CAN3_Init 0 */
+
+  /* USER CODE END CAN3_Init 0 */
+
+  /* USER CODE BEGIN CAN3_Init 1 */
+
+  /* USER CODE END CAN3_Init 1 */
+  hcan3.Instance = CAN3;
+  hcan3.Init.Prescaler = 6;
+  hcan3.Init.Mode = CAN_MODE_LOOPBACK;
+  hcan3.Init.SyncJumpWidth = CAN_SJW_1TQ;
+  hcan3.Init.TimeSeg1 = CAN_BS1_6TQ;
+  hcan3.Init.TimeSeg2 = CAN_BS2_1TQ;
+  hcan3.Init.TimeTriggeredMode = DISABLE;
+  hcan3.Init.AutoBusOff = ENABLE;
+  hcan3.Init.AutoWakeUp = ENABLE;
+  hcan3.Init.AutoRetransmission = DISABLE;
+  hcan3.Init.ReceiveFifoLocked = DISABLE;
+  hcan3.Init.TransmitFifoPriority = DISABLE;
+  if (HAL_CAN_Init(&hcan3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN CAN3_Init 2 */
+
+  /* USER CODE END CAN3_Init 2 */
+
 }
 
 /**
@@ -317,6 +453,41 @@ static void MX_USART2_UART_Init(void)
 }
 
 /**
+  * @brief USART3 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART3_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART3_Init 0 */
+
+  /* USER CODE END USART3_Init 0 */
+
+  /* USER CODE BEGIN USART3_Init 1 */
+
+  /* USER CODE END USART3_Init 1 */
+  huart3.Instance = USART3;
+  huart3.Init.BaudRate = 115200;
+  huart3.Init.WordLength = UART_WORDLENGTH_8B;
+  huart3.Init.StopBits = UART_STOPBITS_1;
+  huart3.Init.Parity = UART_PARITY_NONE;
+  huart3.Init.Mode = UART_MODE_TX_RX;
+  huart3.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart3.Init.OverSampling = UART_OVERSAMPLING_16;
+  huart3.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+  huart3.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+  if (HAL_UART_Init(&huart3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART3_Init 2 */
+
+  /* USER CODE END USART3_Init 2 */
+
+}
+
+/**
   * Enable DMA controller clock
   */
 static void MX_DMA_Init(void)
@@ -376,14 +547,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PD8 PD9 */
-  GPIO_InitStruct.Pin = GPIO_PIN_8|GPIO_PIN_9;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  GPIO_InitStruct.Alternate = GPIO_AF7_USART3;
-  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
-
   /*Configure GPIO pin : SDMMC1_CD_Pin */
   GPIO_InitStruct.Pin = SDMMC1_CD_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
@@ -399,30 +562,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PA8 PA15 */
-  GPIO_InitStruct.Pin = GPIO_PIN_8|GPIO_PIN_15;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  GPIO_InitStruct.Alternate = GPIO_AF11_CAN3;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : PB5 PB6 */
-  GPIO_InitStruct.Pin = GPIO_PIN_5|GPIO_PIN_6;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  GPIO_InitStruct.Alternate = GPIO_AF9_CAN2;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : PB8 PB9 */
-  GPIO_InitStruct.Pin = GPIO_PIN_8|GPIO_PIN_9;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  GPIO_InitStruct.Alternate = GPIO_AF9_CAN1;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
 }
 
 /* USER CODE BEGIN 4 */
@@ -436,7 +575,7 @@ static void MX_GPIO_Init(void)
   * @retval None
   */
 /* USER CODE END Header_plm_task_store_data */
-void plm_task_store_data(void *argument)
+void plm_task_store_data(void const * argument)
 {
   /* init code for USB_DEVICE */
   MX_USB_DEVICE_Init();
@@ -447,6 +586,42 @@ void plm_task_store_data(void *argument)
     plm_store_data();
   }
   /* USER CODE END 5 */
+}
+
+/* USER CODE BEGIN Header_plm_task_service_can */
+/**
+* @brief Function implementing the PLM_ServiceCAN thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_plm_task_service_can */
+void plm_task_service_can(void const * argument)
+{
+  /* USER CODE BEGIN plm_task_service_can */
+  /* Infinite loop */
+  for(;;)
+  {
+    plm_service_can();
+  }
+  /* USER CODE END plm_task_service_can */
+}
+
+/* USER CODE BEGIN Header_plm_task_transmit_data */
+/**
+* @brief Function implementing the PLM_TransmitDat thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_plm_task_transmit_data */
+void plm_task_transmit_data(void const * argument)
+{
+  /* USER CODE BEGIN plm_task_transmit_data */
+  /* Infinite loop */
+  for(;;)
+  {
+    plm_transmit_data();
+  }
+  /* USER CODE END plm_task_transmit_data */
 }
 
 /**
