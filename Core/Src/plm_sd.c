@@ -7,28 +7,30 @@
 
 #include "main.h"
 #include "fatfs.h"
+#include "ff_gen_drv.h"
+#include "sd_diskio.h"
 
 uint8_t plm_sd_init(void) {
-    FRESULT res;
+    // checks that the card is inserted & initializes SD interface
+    DSTATUS status = SD_Driver.disk_initialize(0);
+    if (status == STA_NOINIT) return 1;
 
-    // check if the SD card is inserted (0)
-    uint8_t sd_in = !HAL_GPIO_ReadPin(SDMMC1_CD_GPIO_Port, SDMMC1_CD_Pin);
-    if (!sd_in) return 1;
+//    FRESULT res;
 
-    // mount
-    res = f_mount(&SDFatFS, SDPath, 1);
-    if (res != FR_OK) return 1;
-
-    // open a file
-    res = f_open(&SDFile, "data.dat", FA_CREATE_ALWAYS | FA_WRITE);
-    if (res != FR_OK) return 1;
+//    // mount
+//    res = f_mount(&SDFatFS, SDPath, 1);
+//    if (res != FR_OK) return 1;
+//
+//    // open a file
+//    res = f_open(&SDFile, "data.dat", FA_CREATE_ALWAYS | FA_WRITE);
+//    if (res != FR_OK) return 1;
 
     return 0;
 }
 
 void plm_sd_deinit(void) {
-    f_close(&SDFile);
-    f_mount(NULL, SDPath, 0);
+//    f_close(&SDFile);
+//    f_mount(NULL, SDPath, 0);
 }
 
 uint8_t plm_sd_write(uint8_t* buffer, uint16_t size) {

@@ -22,7 +22,8 @@
 #include "usbd_storage_if.h"
 
 /* USER CODE BEGIN INCLUDE */
-
+#include "ff_gen_drv.h"
+#include "sd_diskio.h"
 /* USER CODE END INCLUDE */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -178,6 +179,9 @@ USBD_StorageTypeDef USBD_Storage_Interface_fops_FS =
 int8_t STORAGE_Init_FS(uint8_t lun)
 {
   /* USER CODE BEGIN 2 */
+    // NOTE: called within HAL_PCD_IRQHandler
+    // HAL_SD_Init won't work here
+    // initialization is done in plm_sd_init
     HAL_SD_StateTypeDef sd_state = HAL_SD_GetState(&hsd1);
     return sd_state == HAL_SD_STATE_READY ? USBD_OK : USBD_FAIL;
   /* USER CODE END 2 */
@@ -221,8 +225,8 @@ int8_t STORAGE_IsReady_FS(uint8_t lun)
 int8_t STORAGE_IsWriteProtected_FS(uint8_t lun)
 {
   /* USER CODE BEGIN 5 */
-    // read-only mode
-    return USBD_FAIL;
+    // 0 = writes allowed
+    return 0;
   /* USER CODE END 5 */
 }
 
@@ -237,11 +241,8 @@ int8_t STORAGE_IsWriteProtected_FS(uint8_t lun)
 int8_t STORAGE_Read_FS(uint8_t lun, uint8_t *buf, uint32_t blk_addr, uint16_t blk_len)
 {
   /* USER CODE BEGIN 6 */
-    HAL_StatusTypeDef res = HAL_SD_ReadBlocks(&hsd1, buf, blk_addr, blk_len, HAL_MAX_DELAY);
-    if (res != HAL_OK) return USBD_FAIL;
-
-    HAL_SD_StateTypeDef sd_state = HAL_SD_GetState(&hsd1);
-    return sd_state == HAL_SD_STATE_READY ? USBD_OK : USBD_FAIL;
+    DRESULT res = SD_Driver.disk_read(lun, buf, blk_addr, blk_len);
+    return res == RES_OK ? USBD_OK : USBD_FAIL;
   /* USER CODE END 6 */
 }
 
@@ -256,12 +257,8 @@ int8_t STORAGE_Read_FS(uint8_t lun, uint8_t *buf, uint32_t blk_addr, uint16_t bl
 int8_t STORAGE_Write_FS(uint8_t lun, uint8_t *buf, uint32_t blk_addr, uint16_t blk_len)
 {
   /* USER CODE BEGIN 7 */
-//    HAL_StatusTypeDef res = HAL_SD_WriteBlocks(&hsd1, buf, blk_addr, blk_len, HAL_MAX_DELAY);
-//    if (res != HAL_OK) return USBD_FAIL;
-//
-//    HAL_SD_StateTypeDef sd_state = HAL_SD_GetState(&hsd1);
-//    return sd_state == HAL_SD_STATE_READY ? USBD_OK : USBD_FAIL;
-    return USBD_OK;
+    DRESULT res = SD_Driver.disk_write(lun, buf, blk_addr, blk_len);
+    return res == RES_OK ? USBD_OK : USBD_FAIL;
   /* USER CODE END 7 */
 }
 

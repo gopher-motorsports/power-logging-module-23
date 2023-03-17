@@ -24,7 +24,6 @@ void plm_init(void) {
 //    S8 err = init_can(GCAN0, &hcan1, PLM_ID, BXTYPE_MASTER);
 //    err &= init_can(GCAN1, &hcan2, PLM_ID, BXTYPE_MASTER);
 //    err &= init_can(GCAN2, &hcan3, PLM_ID, BXTYPE_MASTER);
-    HAL_StatusTypeDef res = HAL_SD_Init(&hsd1);
 }
 
 void plm_service_can(void) {
@@ -39,12 +38,12 @@ void plm_store_data(void) {
     static uint8_t sd_ready = 0;
     uint8_t err;
 
-//    if (!sd_ready) {
-//        // initialize SD card
-//        err = plm_sd_init();
-//        if (err) plm_sd_deinit();
-//        else sd_ready = 1;
-//    }
+    if (!sd_ready) {
+        // initialize SD card
+        err = plm_sd_init();
+        if (err) plm_sd_deinit();
+        else sd_ready = 1;
+    }
 
 //    if (sd_ready) {
 //        uint8_t data1[3] = {1, 2, 3};
