@@ -12,9 +12,10 @@
 #include "main.h"
 #include "GopherCAN.h"
 #include "usb_device.h"
+#include "fatfs.h"
 #include "plm_sd.h"
 #include "plm_xb.h"
-#include "fatfs.h"
+#include "plm_error.h"
 
 extern CAN_HandleTypeDef hcan1;
 extern CAN_HandleTypeDef hcan2;
@@ -28,6 +29,7 @@ void plm_init(void) {
 //    S8 err = init_can(GCAN0, &hcan1, PLM_ID, BXTYPE_MASTER);
 //    err &= init_can(GCAN1, &hcan2, PLM_ID, BXTYPE_MASTER);
 //    err &= init_can(GCAN2, &hcan3, PLM_ID, BXTYPE_MASTER);
+    plm_err_reset();
 }
 
 void plm_service_can(void) {
@@ -35,7 +37,7 @@ void plm_service_can(void) {
 //    service_can_tx(&hcan2);
 //    service_can_tx(&hcan3);
 //    service_can_rx_buffer();
-    osDelay(1);
+    osDelay(PLM_DELAY_CAN);
 }
 
 void plm_store_data(void) {
@@ -54,28 +56,48 @@ void plm_store_data(void) {
     if (!usb_connected) {
         if (!fs_ready) {
             // init FatFs and open the current data file
-            uint8_t err = plm_sd_init("data.dat");
-            if (err) plm_sd_deinit();
+            PLM_RES res = plm_sd_init("data.dat");
+            if (res != PLM_OK) {
+                plm_sd_deinit();
+                plm_err_set(res);
+            }
             else fs_ready = 1;
         }
 
         if (fs_ready) {
             // write data
             uint8_t data[5] = {1, 2, 3, 4, 5};
-            uint8_t err = plm_sd_write(data, 5);
-            if (err) {
+            PLM_RES res = plm_sd_write(data, 5);
+            if (res != PLM_OK) {
                 // write failed
-                plm_sd_deinit();
                 fs_ready = 0;
+                plm_sd_deinit();
+                plm_err_set(res);
             }
         }
     }
 
-    osDelay(100);
+    osDelay(PLM_DELAY_SD);
 }
 
 void plm_transmit_data(void) {
-//    uint8_t msg[3] = {1, 2, 3};
-//    plm_xb_send(msg, 3);
-    osDelay(5000);
+    uint8_t msg[3] = {1, 2, 3};
+    PLM_RES res = plm_xb_send(msg, 3);
+    if (res != PLM_OK) plm_err_set(res);
+
+    osDelay(PLM_DELAY_XB);
+}
+
+void plm_handle_error(void) {
+    static uint32_t last_print = 0;
+
+    uint32_t tick = osKernelSysTick();
+    PLM_RES res = plm_err_status();
+    if (res != PLM_OK && tick - last_print >= PLM_DELAY_ERR_PRINT) {
+        printf("ERROR: %u\n", res);
+        last_print = tick;
+    }
+
+    plm_err_blink();
+    osDelay(PLM_DELAY_ERR);
 }

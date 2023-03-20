@@ -57,8 +57,6 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define LD1_Pin GPIO_PIN_0
-#define LD1_GPIO_Port GPIOB
 #define USART1_TX_Pin GPIO_PIN_14
 #define USART1_TX_GPIO_Port GPIOB
 #define USART1_RX_Pin GPIO_PIN_15
@@ -85,8 +83,8 @@ void Error_Handler(void);
 #define USART2_RX_GPIO_Port GPIOD
 #define LED5_Pin GPIO_PIN_9
 #define LED5_GPIO_Port GPIOG
-#define LD2_Pin GPIO_PIN_7
-#define LD2_GPIO_Port GPIOB
+#define DEV_LED_Pin GPIO_PIN_7
+#define DEV_LED_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */

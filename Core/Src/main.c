@@ -61,6 +61,7 @@ DMA_HandleTypeDef hdma_usart2_tx;
 osThreadId PLM_StoreDataHandle;
 osThreadId PLM_ServiceCANHandle;
 osThreadId PLM_TransmitDatHandle;
+osThreadId PLM_HandleErrorHandle;
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -79,6 +80,7 @@ static void MX_USART3_UART_Init(void);
 void plm_task_store_data(void const * argument);
 void plm_task_service_can(void const * argument);
 void plm_task_transmit_data(void const * argument);
+void plm_task_handle_error(void const * argument);
 
 /* USER CODE BEGIN PFP */
 // redirect printf to USART3
@@ -170,6 +172,10 @@ int main(void)
   /* definition and creation of PLM_TransmitDat */
   osThreadDef(PLM_TransmitDat, plm_task_transmit_data, osPriorityNormal, 0, 512);
   PLM_TransmitDatHandle = osThreadCreate(osThread(PLM_TransmitDat), NULL);
+
+  /* definition and creation of PLM_HandleError */
+  osThreadDef(PLM_HandleError, plm_task_handle_error, osPriorityNormal, 0, 128);
+  PLM_HandleErrorHandle = osThreadCreate(osThread(PLM_HandleError), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -534,18 +540,11 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOA_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, LD1_Pin|LD2_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOG, LED0_Pin|LED1_Pin|LED2_Pin|LED3_Pin
                           |LED4_Pin|LED5_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : LD1_Pin LD2_Pin */
-  GPIO_InitStruct.Pin = LD1_Pin|LD2_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(DEV_LED_GPIO_Port, DEV_LED_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : SDMMC1_CD_Pin */
   GPIO_InitStruct.Pin = SDMMC1_CD_Pin;
@@ -561,6 +560,13 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : DEV_LED_Pin */
+  GPIO_InitStruct.Pin = DEV_LED_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(DEV_LED_GPIO_Port, &GPIO_InitStruct);
 
 }
 
@@ -622,6 +628,24 @@ void plm_task_transmit_data(void const * argument)
     plm_transmit_data();
   }
   /* USER CODE END plm_task_transmit_data */
+}
+
+/* USER CODE BEGIN Header_plm_task_handle_error */
+/**
+* @brief Function implementing the PLM_HandleError thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_plm_task_handle_error */
+void plm_task_handle_error(void const * argument)
+{
+  /* USER CODE BEGIN plm_task_handle_error */
+  /* Infinite loop */
+  for(;;)
+  {
+    plm_handle_error();
+  }
+  /* USER CODE END plm_task_handle_error */
 }
 
 /**

@@ -9,7 +9,8 @@
 #define INC_PLM_XB_H_
 
 #include <stdint.h>
+#include "plm_error.h"
 
-void plm_xb_send(uint8_t* buffer, uint16_t size);
+PLM_RES plm_xb_send(uint8_t* buffer, uint16_t size);
 
 #endif /* INC_PLM_XB_H_ */
