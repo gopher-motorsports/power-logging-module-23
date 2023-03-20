@@ -24,7 +24,7 @@
 #define __SD_DISKIO_H
 
 /* USER CODE BEGIN firstSection */
-/* can be used to modify / undefine following code or add new definitions */
+void SD_ResetMsgQueue(void);
 /* USER CODE END firstSection */
 
 /* Includes ------------------------------------------------------------------*/
