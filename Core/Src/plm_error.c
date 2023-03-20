@@ -5,8 +5,10 @@
  *      Author: jonathan
  */
 
+#include <stdio.h>
 #include "plm_error.h"
 #include "main.h"
+#include "cmsis_os.h"
 
 static PLM_RES err_code;
 static GPIO_TypeDef* err_led_port;
@@ -21,8 +23,8 @@ void plm_err_set(PLM_RES code) {
 
     // TODO: map codes to LEDs
 //    if (code >= PLM_ERR_SD_INIT && code <= PLM_ERR_SD_WRITE)
-    err_led_port = DEV_LED_GPIO_Port;
-    err_led_pin = DEV_LED_Pin;
+    err_led_port = LD2_GPIO_Port;
+    err_led_pin = LD2_Pin;
 }
 
 void plm_err_reset(void) {
@@ -46,6 +48,7 @@ void plm_err_blink(void) {
         if (tick - last_blink >= ERR_BLINK_DELAY) {
             blinks_remaining = err_code * 2;
             HAL_GPIO_WritePin(err_led_port, err_led_pin, GPIO_PIN_SET);
+            printf("ERROR: %u\n", err_code);
             last_blink = tick;
         }
     } else {

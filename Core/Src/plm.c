@@ -23,13 +23,26 @@ extern CAN_HandleTypeDef hcan3;
 
 extern USBD_HandleTypeDef hUsbDeviceFS;
 
-extern SD_HandleTypeDef hsd1;
-
 void plm_init(void) {
 //    S8 err = init_can(GCAN0, &hcan1, PLM_ID, BXTYPE_MASTER);
 //    err &= init_can(GCAN1, &hcan2, PLM_ID, BXTYPE_MASTER);
 //    err &= init_can(GCAN2, &hcan3, PLM_ID, BXTYPE_MASTER);
     plm_err_reset();
+}
+
+void plm_heartbeat(void) {
+    // heartbeat blink
+    static uint32_t last_blink = 0;
+    uint32_t tick = osKernelSysTick();
+    if (tick - last_blink >= PLM_DELAY_HEARTBEAT_BLINK) {
+        HAL_GPIO_TogglePin(LD1_GPIO_Port, LD1_Pin);
+        last_blink = tick;
+    }
+
+    // error blink
+    plm_err_blink();
+
+    osDelay(PLM_DELAY_HEARTBEAT);
 }
 
 void plm_service_can(void) {
@@ -86,18 +99,4 @@ void plm_transmit_data(void) {
     if (res != PLM_OK) plm_err_set(res);
 
     osDelay(PLM_DELAY_XB);
-}
-
-void plm_handle_error(void) {
-    static uint32_t last_print = 0;
-
-    uint32_t tick = osKernelSysTick();
-    PLM_RES res = plm_err_status();
-    if (res != PLM_OK && tick - last_print >= PLM_DELAY_ERR_PRINT) {
-        printf("ERROR: %u\n", res);
-        last_print = tick;
-    }
-
-    plm_err_blink();
-    osDelay(PLM_DELAY_ERR);
 }
