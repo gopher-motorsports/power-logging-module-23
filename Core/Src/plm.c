@@ -13,9 +13,10 @@
 #include "GopherCAN.h"
 #include "usb_device.h"
 #include "fatfs.h"
+#include "plm_error.h"
 #include "plm_sd.h"
 #include "plm_xb.h"
-#include "plm_error.h"
+#include "plm_sim.h"
 
 extern CAN_HandleTypeDef hcan1;
 extern CAN_HandleTypeDef hcan2;
@@ -24,10 +25,12 @@ extern CAN_HandleTypeDef hcan3;
 extern USBD_HandleTypeDef hUsbDeviceFS;
 
 void plm_init(void) {
-//    S8 err = init_can(GCAN0, &hcan1, PLM_ID, BXTYPE_MASTER);
-//    err &= init_can(GCAN1, &hcan2, PLM_ID, BXTYPE_MASTER);
-//    err &= init_can(GCAN2, &hcan3, PLM_ID, BXTYPE_MASTER);
     plm_err_reset();
+
+    S8 err = init_can(GCAN0, &hcan1, PLM_ID, BXTYPE_MASTER);
+    err |= init_can(GCAN1, &hcan2, PLM_ID, BXTYPE_MASTER);
+    err |= init_can(GCAN2, &hcan3, PLM_ID, BXTYPE_MASTER);
+    if (err) plm_err_set(PLM_ERR_INIT);
 }
 
 void plm_heartbeat(void) {
@@ -46,10 +49,11 @@ void plm_heartbeat(void) {
 }
 
 void plm_service_can(void) {
-//    service_can_tx(&hcan1);
-//    service_can_tx(&hcan2);
-//    service_can_tx(&hcan3);
-//    service_can_rx_buffer();
+    service_can_tx(&hcan1);
+    service_can_tx(&hcan2);
+    service_can_tx(&hcan3);
+    service_can_rx_buffer();
+
     osDelay(PLM_DELAY_CAN);
 }
 
@@ -99,4 +103,16 @@ void plm_transmit_data(void) {
     if (res != PLM_OK) plm_err_set(res);
 
     osDelay(PLM_DELAY_XB);
+}
+
+void plm_simulate_data(void) {
+#ifndef PLM_SIMULATE_DATA
+    osThreadId thread_id = osThreadGetId();
+    osStatus status = osThreadTerminate(thread_id);
+    if (status != osOK) plm_err_set(PLM_ERR_SIM);
+#endif
+    PLM_RES res = plm_sim_generate_data();
+    if (res != PLM_OK) plm_err_set(PLM_ERR_SIM);
+
+    osDelay(PLM_DELAY_SIM);
 }
