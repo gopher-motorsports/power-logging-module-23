@@ -17,6 +17,7 @@
 #include "plm_sd.h"
 #include "plm_xb.h"
 #include "plm_sim.h"
+#include "plm_data.h"
 
 extern CAN_HandleTypeDef hcan1;
 extern CAN_HandleTypeDef hcan2;
@@ -55,6 +56,25 @@ void plm_service_can(void) {
     service_can_rx_buffer();
 
     osDelay(PLM_DELAY_CAN);
+}
+
+void plm_collect_data(void) {
+    static uint32_t last_log[NUM_OF_PARAMETERS] = {0};
+
+    // check all parameters
+    for (uint8_t i = 1; i < NUM_OF_PARAMETERS; i++) {
+        CAN_INFO_STRUCT* param = (CAN_INFO_STRUCT*)(PARAMETERS[i]);
+
+        if (param->last_rx > last_log[i]) {
+            // parameter has been updated
+            PLM_RES res = plm_data_record_param(param->ID);
+            if (res != PLM_OK) plm_err_set(res);
+
+            last_log[i] = param->last_rx;
+        }
+    }
+
+    osDelay(PLM_DELAY_DATA);
 }
 
 void plm_store_data(void) {

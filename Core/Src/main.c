@@ -63,6 +63,7 @@ osThreadId PLM_ServiceCANHandle;
 osThreadId PLM_TransmitDatHandle;
 osThreadId PLM_HeartbeatHandle;
 osThreadId PLM_SimulateDatHandle;
+osThreadId PLM_CollectDataHandle;
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -83,6 +84,7 @@ void plm_task_service_can(void const * argument);
 void plm_task_transmit_data(void const * argument);
 void plm_task_heartbeat(void const * argument);
 void plm_task_simulate_data(void const * argument);
+void plm_task_collect_data(void const * argument);
 
 /* USER CODE BEGIN PFP */
 // redirect printf to USART3
@@ -182,6 +184,10 @@ int main(void)
   /* definition and creation of PLM_SimulateDat */
   osThreadDef(PLM_SimulateDat, plm_task_simulate_data, osPriorityNormal, 0, 512);
   PLM_SimulateDatHandle = osThreadCreate(osThread(PLM_SimulateDat), NULL);
+
+  /* definition and creation of PLM_CollectData */
+  osThreadDef(PLM_CollectData, plm_task_collect_data, osPriorityNormal, 0, 512);
+  PLM_CollectDataHandle = osThreadCreate(osThread(PLM_CollectData), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -670,6 +676,24 @@ void plm_task_simulate_data(void const * argument)
     plm_simulate_data();
   }
   /* USER CODE END plm_task_simulate_data */
+}
+
+/* USER CODE BEGIN Header_plm_task_collect_data */
+/**
+* @brief Function implementing the PLM_CollectData thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_plm_task_collect_data */
+void plm_task_collect_data(void const * argument)
+{
+  /* USER CODE BEGIN plm_task_collect_data */
+  /* Infinite loop */
+  for(;;)
+  {
+    plm_collect_data();
+  }
+  /* USER CODE END plm_task_collect_data */
 }
 
 /**
