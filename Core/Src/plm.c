@@ -31,7 +31,14 @@ void plm_init(void) {
     S8 err = init_can(GCAN0, &hcan1, PLM_ID, BXTYPE_MASTER);
     err |= init_can(GCAN1, &hcan2, PLM_ID, BXTYPE_MASTER);
     err |= init_can(GCAN2, &hcan3, PLM_ID, BXTYPE_MASTER);
-    if (err) plm_err_set(PLM_ERR_INIT);
+    if (err) {
+        // PLM shouldn't run without CAN
+        plm_err_set(PLM_ERR_INIT);
+        HAL_Delay(PLM_DELAY_RESTART);
+        NVIC_SystemReset();
+    }
+
+    printf("PLM successfully initialized\n");
 }
 
 void plm_heartbeat(void) {
@@ -43,7 +50,7 @@ void plm_heartbeat(void) {
         last_blink = tick;
     }
 
-    // error blink
+    // blink any active errors
     plm_err_blink();
 
     osDelay(PLM_DELAY_HEARTBEAT);

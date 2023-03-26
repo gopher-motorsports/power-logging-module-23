@@ -11,6 +11,7 @@
 #include <stdint.h>
 #include "stm32f767xx.h"
 
+#define ERR_HARDFAULT_BLINKS 10 // # times to blink in hardfault handler
 #define ERR_BLINK_PERIOD 200 // ms between individual blinks
 #define ERR_BLINK_DELAY 800 // ms between sets of blinks
 

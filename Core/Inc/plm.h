@@ -15,6 +15,7 @@
 #define PLM_DELAY_SD 100
 #define PLM_DELAY_XB 1000
 #define PLM_DELAY_SIM 5000
+#define PLM_DELAY_RESTART 1000
 
 // define to automatically generate and transmit GCAN data
 #define PLM_SIMULATE_DATA

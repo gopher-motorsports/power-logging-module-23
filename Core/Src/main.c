@@ -555,8 +555,8 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOB, LD1_Pin|LD2_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOG, LED0_Pin|LED1_Pin|LED2_Pin|LED3_Pin
-                          |LED4_Pin|LED5_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOG, LED_STATUS_Pin|LED_OVERCURRENT_Pin|LED_FAULT_Pin|LED_STORAGE_Pin
+                          |LED_MEMORY_Pin|LED_USB_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pins : LD1_Pin LD2_Pin */
   GPIO_InitStruct.Pin = LD1_Pin|LD2_Pin;
@@ -571,10 +571,10 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(SDMMC1_CD_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : LED0_Pin LED1_Pin LED2_Pin LED3_Pin
-                           LED4_Pin LED5_Pin */
-  GPIO_InitStruct.Pin = LED0_Pin|LED1_Pin|LED2_Pin|LED3_Pin
-                          |LED4_Pin|LED5_Pin;
+  /*Configure GPIO pins : LED_STATUS_Pin LED_OVERCURRENT_Pin LED_FAULT_Pin LED_STORAGE_Pin
+                           LED_MEMORY_Pin LED_USB_Pin */
+  GPIO_InitStruct.Pin = LED_STATUS_Pin|LED_OVERCURRENT_Pin|LED_FAULT_Pin|LED_STORAGE_Pin
+                          |LED_MEMORY_Pin|LED_USB_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
