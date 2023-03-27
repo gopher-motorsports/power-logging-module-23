@@ -7,8 +7,11 @@
 
 #include "stm32f7xx_hal.h"
 #include "plm_xb.h"
+#include "plm_data.h"
 
 extern UART_HandleTypeDef huart2;
+
+extern PLM_DBL_BUFFER DB;
 
 PLM_RES plm_xb_send(uint8_t* buffer, uint16_t size) {
     HAL_StatusTypeDef res = HAL_UART_Transmit_DMA(&huart2, buffer, size);
@@ -16,5 +19,5 @@ PLM_RES plm_xb_send(uint8_t* buffer, uint16_t size) {
 }
 
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef* huart) {
-    return;
+    DB.xb_cplt = 1;
 }

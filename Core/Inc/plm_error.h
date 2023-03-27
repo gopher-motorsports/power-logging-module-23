@@ -16,12 +16,14 @@
 #define ERR_BLINK_DELAY 800 // ms between sets of blinks
 
 typedef enum {
-  PLM_OK            = 0,
-  PLM_ERR_INIT      = 1,
-  PLM_ERR_SD_INIT   = 2,
-  PLM_ERR_SD_WRITE  = 3,
-  PLM_ERR_XB_TX     = 4,
-  PLM_ERR_SIM       = 5
+  PLM_OK                = 0,
+  PLM_ERR_INIT          = 1,
+  PLM_ERR_SD_INIT       = 2,
+  PLM_ERR_SD_WRITE      = 3,
+  PLM_ERR_XB_TX         = 4,
+  PLM_ERR_SIM           = 5,
+  PLM_ERR_PACKET        = 6,
+  PLM_ERR_BUFFER_FULL   = 7
 } PLM_RES;
 
 PLM_RES plm_err_status(void);

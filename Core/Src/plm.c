@@ -25,6 +25,27 @@ extern CAN_HandleTypeDef hcan3;
 
 extern USBD_HandleTypeDef hUsbDeviceFS;
 
+static uint8_t b1[PLM_BUFFER_SIZE];
+static PLM_BUFFER buffer1 = {
+    .bytes = b1,
+    .size = PLM_BUFFER_SIZE,
+    .fill = 0
+};
+
+static uint8_t b2[PLM_BUFFER_SIZE];
+static PLM_BUFFER buffer2 = {
+    .bytes = b2,
+    .size = PLM_BUFFER_SIZE,
+    .fill = 0
+};
+
+PLM_DBL_BUFFER DB = {
+    .buffers = { &buffer1, &buffer2 },
+    .write_index = 0,
+    .sd_cplt = 1,
+    .xb_cplt = 1
+};
+
 void plm_init(void) {
     plm_err_reset();
 
@@ -68,13 +89,24 @@ void plm_service_can(void) {
 void plm_collect_data(void) {
     static uint32_t last_log[NUM_OF_PARAMETERS] = {0};
 
-    // check all parameters
+    // swap buffers after SD write and Xbee transfer are complete
+    // critical section entry/exit is fast and fine for a quick swap
+    if (DB.sd_cplt && DB.xb_cplt) {
+        taskENTER_CRITICAL();
+        DB.write_index = !DB.write_index;
+        DB.buffers[DB.write_index]->fill = 0;
+        DB.sd_cplt = 0;
+        DB.xb_cplt = 0;
+        taskEXIT_CRITICAL();
+    }
+
+    // check gcan parameters
     for (uint8_t i = 1; i < NUM_OF_PARAMETERS; i++) {
         CAN_INFO_STRUCT* param = (CAN_INFO_STRUCT*)(PARAMETERS[i]);
 
         if (param->last_rx > last_log[i]) {
             // parameter has been updated
-            PLM_RES res = plm_data_record_param(param->ID);
+            PLM_RES res = plm_data_record_param(DB.buffers[DB.write_index], param);
             if (res != PLM_OK) plm_err_set(res);
 
             last_log[i] = param->last_rx;
@@ -92,6 +124,7 @@ void plm_store_data(void) {
     uint8_t usb_connected = hUsbDeviceFS.dev_state == USBD_STATE_CONFIGURED;
 
     // prevent USB access and FatFs interaction at the same time
+    // WARNING: if USB is connected for too long while logging, buffer will eventually fill
     if (usb_connected && fs_ready) {
         plm_sd_deinit();
         fs_ready = 0;
@@ -110,13 +143,17 @@ void plm_store_data(void) {
 
         if (fs_ready) {
             // write data
-            uint8_t data[5] = {1, 2, 3, 4, 5};
-            PLM_RES res = plm_sd_write(data, 5);
-            if (res != PLM_OK) {
-                // write failed
-                fs_ready = 0;
-                plm_sd_deinit();
-                plm_err_set(res);
+            if (!DB.sd_cplt) {
+                PLM_BUFFER* buffer = DB.buffers[!DB.write_index];
+                if (buffer->fill > 0) {
+                    PLM_RES res = plm_sd_write(buffer->bytes, buffer->fill);
+                    if (res != PLM_OK) {
+                        // write failed
+                        fs_ready = 0;
+                        plm_sd_deinit();
+                        plm_err_set(res);
+                    } else DB.sd_cplt = 1;
+                } else DB.sd_cplt = 1;
             }
         }
     }
@@ -125,9 +162,13 @@ void plm_store_data(void) {
 }
 
 void plm_transmit_data(void) {
-    uint8_t msg[3] = {1, 2, 3};
-    PLM_RES res = plm_xb_send(msg, 3);
-    if (res != PLM_OK) plm_err_set(res);
+    if (!DB.xb_cplt) {
+        PLM_BUFFER* buffer = DB.buffers[!DB.write_index];
+        if (buffer->fill > 0) {
+            PLM_RES res = plm_xb_send(buffer->bytes, buffer->fill);
+            if (res != PLM_OK) plm_err_set(res);
+        } else DB.xb_cplt = 1;
+    }
 
     osDelay(PLM_DELAY_XB);
 }

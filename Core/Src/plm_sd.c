@@ -37,19 +37,13 @@ void plm_sd_deinit(void) {
 }
 
 PLM_RES plm_sd_write(uint8_t* buffer, uint16_t size) {
-    static uint32_t last_flush = 0;
-
     unsigned int bytes_written = 0;
     FRESULT res = f_write(&SDFile, buffer, size, &bytes_written);
     if (res != FR_OK || bytes_written != size) return PLM_ERR_SD_WRITE;
 
-    uint32_t tick = osKernelSysTick();
-    if (tick - last_flush >= SD_FLUSH_PERIOD) {
-        // flush cached data
-        res = f_sync(&SDFile);
-        if (res != FR_OK) return PLM_ERR_SD_WRITE;
-        last_flush = tick;
-    }
+    // flush cached data
+    res = f_sync(&SDFile);
+    if (res != FR_OK) return PLM_ERR_SD_WRITE;
 
     return PLM_OK;
 }
