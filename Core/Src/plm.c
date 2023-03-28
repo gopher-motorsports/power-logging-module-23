@@ -133,7 +133,7 @@ void plm_store_data(void) {
     if (!usb_connected) {
         if (!fs_ready) {
             // init FatFs and open the current data file
-            PLM_RES res = plm_sd_init("data.dat");
+            PLM_RES res = plm_sd_init();
             if (res != PLM_OK) {
                 plm_sd_deinit();
                 plm_err_set(res);

@@ -8,8 +8,11 @@
 #include "plm_sd.h"
 #include "main.h"
 #include "fatfs.h"
+#include <stdio.h>
 
-PLM_RES plm_sd_init(const char* filename) {
+extern RTC_HandleTypeDef hrtc;
+
+PLM_RES plm_sd_init(void) {
     // checks that the card is inserted & initializes SD interface
     DSTATUS status = SD_Driver.disk_initialize(0);
     if (status == STA_NOINIT) return PLM_ERR_SD_INIT;
@@ -21,6 +24,14 @@ PLM_RES plm_sd_init(const char* filename) {
     // register file system
     FRESULT res = f_mount(&SDFatFS, SDPath, 1);
     if (res != FR_OK) return PLM_ERR_SD_INIT;
+
+    // generate filename
+    char filename[] = "PLM_YYYY-MM-DD-hh-mm-ss.gdat";
+    RTC_TimeTypeDef time;
+    RTC_DateTypeDef date;
+    HAL_RTC_GetTime(&hrtc, &time, RTC_FORMAT_BIN);
+    HAL_RTC_GetDate(&hrtc, &date, RTC_FORMAT_BIN);
+    sprintf(filename, "PLM_%04u-%02u-%02u-%02u-%02u-%02u.gdat", date.Year, date.Month, date.Date, time.Hours, time.Minutes, time.Seconds);
 
     // open data file
     // file is created if it doesn't exist

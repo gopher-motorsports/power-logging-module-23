@@ -11,7 +11,7 @@
 #include <stdint.h>
 #include "plm_error.h"
 
-PLM_RES plm_sd_init(const char* filename);
+PLM_RES plm_sd_init(void);
 void plm_sd_deinit(void);
 PLM_RES plm_sd_write(uint8_t* buffer, uint16_t size);
 
