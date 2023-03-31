@@ -66,6 +66,7 @@ osThreadId PLM_TransmitDatHandle;
 osThreadId PLM_HeartbeatHandle;
 osThreadId PLM_SimulateDatHandle;
 osThreadId PLM_CollectDataHandle;
+osThreadId PLM_MonitorCurrHandle;
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -88,6 +89,7 @@ void plm_task_transmit_data(void const * argument);
 void plm_task_heartbeat(void const * argument);
 void plm_task_simulate_data(void const * argument);
 void plm_task_collect_data(void const * argument);
+void plm_task_monitor_current(void const * argument);
 
 /* USER CODE BEGIN PFP */
 // redirect printf to USART3
@@ -192,6 +194,10 @@ int main(void)
   /* definition and creation of PLM_CollectData */
   osThreadDef(PLM_CollectData, plm_task_collect_data, osPriorityNormal, 0, 512);
   PLM_CollectDataHandle = osThreadCreate(osThread(PLM_CollectData), NULL);
+
+  /* definition and creation of PLM_MonitorCurr */
+  osThreadDef(PLM_MonitorCurr, plm_task_monitor_current, osPriorityNormal, 0, 512);
+  PLM_MonitorCurrHandle = osThreadCreate(osThread(PLM_MonitorCurr), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -762,6 +768,24 @@ void plm_task_collect_data(void const * argument)
     plm_collect_data();
   }
   /* USER CODE END plm_task_collect_data */
+}
+
+/* USER CODE BEGIN Header_plm_task_monitor_current */
+/**
+* @brief Function implementing the PLM_MonitorCurr thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_plm_task_monitor_current */
+void plm_task_monitor_current(void const * argument)
+{
+  /* USER CODE BEGIN plm_task_monitor_current */
+  /* Infinite loop */
+  for(;;)
+  {
+    plm_monitor_current();
+  }
+  /* USER CODE END plm_task_monitor_current */
 }
 
 /**

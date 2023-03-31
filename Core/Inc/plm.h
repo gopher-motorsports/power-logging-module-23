@@ -15,6 +15,7 @@
 #define PLM_DELAY_SD 100
 #define PLM_DELAY_XB 1000
 #define PLM_DELAY_SIM 5000
+#define PLM_DELAY_POWER 10
 #define PLM_DELAY_RESTART 1000
 
 // define to automatically generate and transmit GCAN data
@@ -29,5 +30,6 @@ void plm_collect_data(void);
 void plm_store_data(void);
 void plm_transmit_data(void);
 void plm_simulate_data(void);
+void plm_monitor_current(void);
 
 #endif /* INC_PLM_H_ */

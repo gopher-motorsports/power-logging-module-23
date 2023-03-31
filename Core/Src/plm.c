@@ -184,3 +184,7 @@ void plm_simulate_data(void) {
 
     osDelay(PLM_DELAY_SIM);
 }
+
+void plm_monitor_current(void) {
+    osDelay(PLM_DELAY_POWER);
+}
