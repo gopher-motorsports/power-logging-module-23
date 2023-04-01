@@ -19,6 +19,7 @@
 #include "plm_xb.h"
 #include "plm_sim.h"
 #include "plm_data.h"
+#include "plm_power.h"
 
 extern CAN_HandleTypeDef hcan1;
 extern CAN_HandleTypeDef hcan2;
@@ -65,6 +66,12 @@ void plm_init(void) {
         plm_err_set(PLM_ERR_INIT);
         HAL_Delay(PLM_DELAY_RESTART);
         NVIC_SystemReset();
+    }
+
+    // enable all power channel switches
+    for (size_t i = 0; i < NUM_OF_CHANNELS; i++) {
+        PLM_POWER_CHANNEL* channel = POWER_CHANNELS[i];
+        HAL_GPIO_WritePin(channel->enable_switch_port, channel->enable_switch_pin, GPIO_PIN_SET);
     }
 
     printf("PLM successfully initialized\n");
@@ -194,5 +201,25 @@ void plm_simulate_data(void) {
 }
 
 void plm_monitor_current(void) {
+    for (size_t i = 0; i < NUM_OF_CHANNELS; i++) {
+        PLM_POWER_CHANNEL* channel = POWER_CHANNELS[i];
+        plm_power_update_channel(channel);
+
+        if (channel->ampsec_sum > channel->ampsec_max && channel->enabled) {
+            // channel has reached Amp*sec threshold, open switch
+            HAL_GPIO_WritePin(channel->enable_switch_port, channel->enable_switch_pin, GPIO_PIN_RESET);
+            channel->trip_time = osKernelSysTick();
+            channel->enabled = 0;
+        } else if (!channel->enabled) {
+            // check if it's time to re-enable this channel
+            uint32_t ms_since_trip = osKernelSysTick() - channel->trip_time;
+            if (ms_since_trip >= channel->reset_delay_ms) {
+                channel->ampsec_sum = 0;
+                HAL_GPIO_WritePin(channel->enable_switch_port, channel->enable_switch_pin, GPIO_PIN_SET);
+                channel->enabled = 1;
+            }
+        }
+    }
+
     osDelay(PLM_DELAY_POWER);
 }
