@@ -1,0 +1,55 @@
+
+module_name: "power-logging-module-23"
+
+buckets:
+    current_channels:
+        # NOTE: frequency will be converted to an integer number of ms for a delay
+        frequency_hz: 250
+        parameters:
+            # these must directly be a variable defined in GopherCAN
+            vbatChan0Current_A:
+                ADC: ADC1_IN0
+                sensor: vbat_channel_current
+                samples_buffered: 1
+            vbatChan1Current_A:
+                ADC: ADC1_IN1
+                sensor: vbat_channel_current
+                samples_buffered: 1
+            vbatChan2Current_A:
+                ADC: ADC1_IN2
+                sensor: vbat_channel_current
+                samples_buffered: 1
+            vbatChan3Current_A:
+                ADC: ADC1_IN3
+                sensor: vbat_channel_current
+                samples_buffered: 1
+            vbatChan4Current_A:
+                ADC: ADC1_IN4
+                sensor: vbat_channel_current
+                samples_buffered: 1
+            vbatChan5Current_A:
+                ADC: ADC1_IN5
+                sensor: vbat_channel_current
+                samples_buffered: 1
+            vbatChan6Current_A:
+                ADC: ADC1_IN6
+                sensor: vbat_channel_current
+                samples_buffered: 1
+            fiveVChan0Current_A:
+                ADC: ADC1_IN7
+                sensor: five_volt_channel_current
+                samples_buffered: 1
+            fiveVChan1Current_A:
+                ADC: ADC1_IN10
+                sensor: five_volt_channel_current
+                samples_buffered: 1
+            fiveVChan2Current_A:
+                ADC: ADC1_IN11
+                sensor: five_volt_channel_current
+                samples_buffered: 1
+            fiveVChan3Current_A:
+                ADC: ADC3_IN9
+                sensor: five_volt_channel_current
+                samples_buffered: 1
+
+

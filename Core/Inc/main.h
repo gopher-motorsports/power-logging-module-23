@@ -57,8 +57,44 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define LD1_Pin GPIO_PIN_0
-#define LD1_GPIO_Port GPIOB
+#define EN_5V_0_Pin GPIO_PIN_4
+#define EN_5V_0_GPIO_Port GPIOE
+#define EN_5V_1_Pin GPIO_PIN_5
+#define EN_5V_1_GPIO_Port GPIOE
+#define EN_5V_2_Pin GPIO_PIN_6
+#define EN_5V_2_GPIO_Port GPIOE
+#define ADC_5V_3_Pin GPIO_PIN_3
+#define ADC_5V_3_GPIO_Port GPIOF
+#define ADC_5V_1_Pin GPIO_PIN_0
+#define ADC_5V_1_GPIO_Port GPIOC
+#define ADC_5V_2_Pin GPIO_PIN_1
+#define ADC_5V_2_GPIO_Port GPIOC
+#define ADC_12V_0_Pin GPIO_PIN_0
+#define ADC_12V_0_GPIO_Port GPIOA
+#define ADC_12V_1_Pin GPIO_PIN_1
+#define ADC_12V_1_GPIO_Port GPIOA
+#define ADC_12V_2_Pin GPIO_PIN_2
+#define ADC_12V_2_GPIO_Port GPIOA
+#define ADC_12V_3_Pin GPIO_PIN_3
+#define ADC_12V_3_GPIO_Port GPIOA
+#define ADC_12V_4_Pin GPIO_PIN_4
+#define ADC_12V_4_GPIO_Port GPIOA
+#define ADC_12V_5_Pin GPIO_PIN_5
+#define ADC_12V_5_GPIO_Port GPIOA
+#define ADC_12V_6_Pin GPIO_PIN_6
+#define ADC_12V_6_GPIO_Port GPIOA
+#define ADC_5V_0_Pin GPIO_PIN_7
+#define ADC_5V_0_GPIO_Port GPIOA
+#define EN_12V_6_Pin GPIO_PIN_0
+#define EN_12V_6_GPIO_Port GPIOB
+#define EN_12V_5_Pin GPIO_PIN_1
+#define EN_12V_5_GPIO_Port GPIOB
+#define EN_12V_4_Pin GPIO_PIN_2
+#define EN_12V_4_GPIO_Port GPIOB
+#define EN_12V_3_Pin GPIO_PIN_11
+#define EN_12V_3_GPIO_Port GPIOF
+#define EN_5V_3_Pin GPIO_PIN_7
+#define EN_5V_3_GPIO_Port GPIOE
 #define USART1_TX_Pin GPIO_PIN_14
 #define USART1_TX_GPIO_Port GPIOB
 #define USART1_RX_Pin GPIO_PIN_15
@@ -85,8 +121,6 @@ void Error_Handler(void);
 #define USART2_RX_GPIO_Port GPIOD
 #define LED_USB_Pin GPIO_PIN_9
 #define LED_USB_GPIO_Port GPIOG
-#define LD2_Pin GPIO_PIN_7
-#define LD2_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */

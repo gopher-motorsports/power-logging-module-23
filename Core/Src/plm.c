@@ -11,6 +11,7 @@
 #include "cmsis_os.h"
 #include "main.h"
 #include "GopherCAN.h"
+#include "gopher_sense.h"
 #include "usb_device.h"
 #include "fatfs.h"
 #include "plm_error.h"
@@ -24,6 +25,11 @@ extern CAN_HandleTypeDef hcan2;
 extern CAN_HandleTypeDef hcan3;
 
 extern USBD_HandleTypeDef hUsbDeviceFS;
+
+extern ADC_HandleTypeDef hadc1;
+extern ADC_HandleTypeDef hadc3;
+
+extern TIM_HandleTypeDef htim10;
 
 static uint8_t b1[PLM_BUFFER_SIZE];
 static PLM_BUFFER buffer1 = {
@@ -49,6 +55,8 @@ PLM_DBL_BUFFER DB = {
 void plm_init(void) {
     plm_err_reset();
 
+    gsense_init(&hcan1, &hadc1, NULL, &hadc3, &htim10, LED_USB_GPIO_Port, LED_USB_Pin);
+
     S8 err = init_can(GCAN0, &hcan1, PLM_ID, BXTYPE_MASTER);
     err |= init_can(GCAN1, &hcan2, PLM_ID, BXTYPE_MASTER);
     err |= init_can(GCAN2, &hcan3, PLM_ID, BXTYPE_MASTER);
@@ -67,7 +75,7 @@ void plm_heartbeat(void) {
     static uint32_t last_blink = 0;
     uint32_t tick = osKernelSysTick();
     if (tick - last_blink >= PLM_DELAY_HEARTBEAT_BLINK) {
-        HAL_GPIO_TogglePin(LD1_GPIO_Port, LD1_Pin);
+        HAL_GPIO_TogglePin(LED_STATUS_GPIO_Port, LED_STATUS_Pin);
         last_blink = tick;
     }
 

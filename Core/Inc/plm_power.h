@@ -8,6 +8,8 @@
 #ifndef INC_PLM_POWER_H_
 #define INC_PLM_POWER_H_
 
+#include "main.h"
+
 typedef struct {
     GPIO_TypeDef* enable_switch_port;
     uint16_t enable_switch_pin;

@@ -23,8 +23,6 @@ void plm_err_set(PLM_RES code) {
 
     // TODO: map codes to LEDs
 //    if (code >= PLM_ERR_SD_INIT && code <= PLM_ERR_SD_WRITE)
-    err_led_port = LD2_GPIO_Port;
-    err_led_pin = LD2_Pin;
 }
 
 void plm_err_reset(void) {
