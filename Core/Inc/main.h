@@ -105,22 +105,22 @@ void Error_Handler(void);
 #define USART3_RX_GPIO_Port GPIOD
 #define SDMMC1_CD_Pin GPIO_PIN_2
 #define SDMMC1_CD_GPIO_Port GPIOG
-#define LED_STATUS_Pin GPIO_PIN_4
-#define LED_STATUS_GPIO_Port GPIOG
-#define LED_OVERCURRENT_Pin GPIO_PIN_5
-#define LED_OVERCURRENT_GPIO_Port GPIOG
-#define LED_FAULT_Pin GPIO_PIN_6
-#define LED_FAULT_GPIO_Port GPIOG
-#define LED_STORAGE_Pin GPIO_PIN_7
-#define LED_STORAGE_GPIO_Port GPIOG
-#define LED_MEMORY_Pin GPIO_PIN_8
+#define LED_USB_Pin GPIO_PIN_4
+#define LED_USB_GPIO_Port GPIOG
+#define LED_MEMORY_Pin GPIO_PIN_5
 #define LED_MEMORY_GPIO_Port GPIOG
+#define LED_STORAGE_Pin GPIO_PIN_6
+#define LED_STORAGE_GPIO_Port GPIOG
+#define LED_FAULT_Pin GPIO_PIN_7
+#define LED_FAULT_GPIO_Port GPIOG
+#define LED_STATUS_Pin GPIO_PIN_8
+#define LED_STATUS_GPIO_Port GPIOG
 #define USART2_TX_Pin GPIO_PIN_5
 #define USART2_TX_GPIO_Port GPIOD
 #define USART2_RX_Pin GPIO_PIN_6
 #define USART2_RX_GPIO_Port GPIOD
-#define LED_USB_Pin GPIO_PIN_9
-#define LED_USB_GPIO_Port GPIOG
+#define LED_OVERCURRENT_Pin GPIO_PIN_9
+#define LED_OVERCURRENT_GPIO_Port GPIOG
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */

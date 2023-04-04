@@ -130,7 +130,6 @@ extern USBD_HandleTypeDef hUsbDeviceFS;
 
 /* USER CODE BEGIN EXPORTED_VARIABLES */
 
-//extern SD_HandleTypeDef hsd1;
 /* USER CODE END EXPORTED_VARIABLES */
 
 /**

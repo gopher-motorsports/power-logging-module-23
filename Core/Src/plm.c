@@ -139,6 +139,8 @@ void plm_store_data(void) {
     uint8_t usb_connected = hUsbDeviceFS.dev_state == USBD_STATE_CONFIGURED;
 
     // prevent USB access and FatFs interaction at the same time
+    // USB callbacks are in USB_DEVICE/App/usbd_storage_if.c
+    // uses the FatFs driver in FATFS/Target/sd_diskio.c
     // WARNING: if USB is connected for too long while logging, buffer will eventually fill
     if (usb_connected && fs_ready) {
         plm_sd_deinit();
@@ -190,9 +192,7 @@ void plm_transmit_data(void) {
 
 void plm_simulate_data(void) {
 #ifndef PLM_SIMULATE_DATA
-    osThreadId thread_id = osThreadGetId();
-    osStatus status = osThreadTerminate(thread_id);
-    if (status != osOK) plm_err_set(PLM_ERR_SIM);
+    osThreadTerminate(osThreadGetId());
 #endif
     PLM_RES res = plm_sim_generate_data();
     if (res != PLM_OK) plm_err_set(PLM_ERR_SIM);
