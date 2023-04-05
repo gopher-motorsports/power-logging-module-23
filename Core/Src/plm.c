@@ -32,26 +32,8 @@ extern ADC_HandleTypeDef hadc3;
 
 extern TIM_HandleTypeDef htim10;
 
-static uint8_t b1[PLM_BUFFER_SIZE];
-static PLM_BUFFER buffer1 = {
-    .bytes = b1,
-    .size = PLM_BUFFER_SIZE,
-    .fill = 0
-};
-
-static uint8_t b2[PLM_BUFFER_SIZE];
-static PLM_BUFFER buffer2 = {
-    .bytes = b2,
-    .size = PLM_BUFFER_SIZE,
-    .fill = 0
-};
-
-PLM_DBL_BUFFER DB = {
-    .buffers = { &buffer1, &buffer2 },
-    .write_index = 0,
-    .sd_cplt = 1,
-    .xb_cplt = 1
-};
+extern PLM_DBL_BUFFER SD_DB;
+extern PLM_DBL_BUFFER XB_DB;
 
 void plm_init(void) {
     plm_err_reset();
@@ -83,6 +65,7 @@ void plm_heartbeat(void) {
     uint32_t tick = osKernelSysTick();
     if (tick - last_blink >= PLM_DELAY_HEARTBEAT_BLINK) {
         HAL_GPIO_TogglePin(LED_STATUS_GPIO_Port, LED_STATUS_Pin);
+        printf("PLM ~ tick: %lu\n", tick);
         last_blink = tick;
     }
 
@@ -104,14 +87,21 @@ void plm_service_can(void) {
 void plm_collect_data(void) {
     static uint32_t last_log[NUM_OF_PARAMETERS] = {0};
 
-    // swap buffers after SD write and Xbee transfer are complete
+    // swap buffers after transfers are complete
     // critical section entry/exit is fast and fine for a quick swap
-    if (DB.sd_cplt && DB.xb_cplt) {
+    if (SD_DB.tx_cplt) {
         taskENTER_CRITICAL();
-        DB.write_index = !DB.write_index;
-        DB.buffers[DB.write_index]->fill = 0;
-        DB.sd_cplt = 0;
-        DB.xb_cplt = 0;
+        SD_DB.write_index = !SD_DB.write_index;
+        SD_DB.buffers[SD_DB.write_index]->fill = 0;
+        SD_DB.tx_cplt = 0;
+        taskEXIT_CRITICAL();
+    }
+
+    if (XB_DB.tx_cplt) {
+        taskENTER_CRITICAL();
+        XB_DB.write_index = !XB_DB.write_index;
+        XB_DB.buffers[XB_DB.write_index]->fill = 0;
+        XB_DB.tx_cplt = 0;
         taskEXIT_CRITICAL();
     }
 
@@ -121,7 +111,10 @@ void plm_collect_data(void) {
 
         if (param->last_rx > last_log[i]) {
             // parameter has been updated
-            PLM_RES res = plm_data_record_param(DB.buffers[DB.write_index], param);
+            PLM_RES res = plm_data_record_param(SD_DB.buffers[SD_DB.write_index], param);
+            if (res != PLM_OK) plm_err_set(res);
+
+            res = plm_data_record_param(XB_DB.buffers[XB_DB.write_index], param);
             if (res != PLM_OK) plm_err_set(res);
 
             last_log[i] = param->last_rx;
@@ -160,8 +153,8 @@ void plm_store_data(void) {
 
         if (fs_ready) {
             // write data
-            if (!DB.sd_cplt) {
-                PLM_BUFFER* buffer = DB.buffers[!DB.write_index];
+            if (!SD_DB.tx_cplt) {
+                PLM_BUFFER* buffer = SD_DB.buffers[!SD_DB.write_index];
                 if (buffer->fill > 0) {
                     PLM_RES res = plm_sd_write(buffer->bytes, buffer->fill);
                     if (res != PLM_OK) {
@@ -169,8 +162,8 @@ void plm_store_data(void) {
                         fs_ready = 0;
                         plm_sd_deinit();
                         plm_err_set(res);
-                    } else DB.sd_cplt = 1;
-                } else DB.sd_cplt = 1;
+                    } else SD_DB.tx_cplt = 1;
+                } else SD_DB.tx_cplt = 1;
             }
         }
     }
@@ -179,12 +172,12 @@ void plm_store_data(void) {
 }
 
 void plm_transmit_data(void) {
-    if (!DB.xb_cplt) {
-        PLM_BUFFER* buffer = DB.buffers[!DB.write_index];
+    if (!XB_DB.tx_cplt) {
+        PLM_BUFFER* buffer = XB_DB.buffers[!XB_DB.write_index];
         if (buffer->fill > 0) {
             PLM_RES res = plm_xb_send(buffer->bytes, buffer->fill);
             if (res != PLM_OK) plm_err_set(res);
-        } else DB.xb_cplt = 1;
+        } else XB_DB.tx_cplt = 1;
     }
 
     osDelay(PLM_DELAY_XB);

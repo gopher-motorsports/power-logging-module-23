@@ -21,8 +21,6 @@
 // define to automatically generate and transmit GCAN data
 #define PLM_SIMULATE_DATA
 
-#define PLM_BUFFER_SIZE 128000
-
 void plm_init(void);
 void plm_heartbeat(void);
 void plm_service_can(void);

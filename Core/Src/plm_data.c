@@ -7,6 +7,46 @@
 
 #include "plm_data.h"
 
+static uint8_t b1[PLM_SD_BUFFER_SIZE];
+static PLM_BUFFER buffer1 = {
+    .bytes = b1,
+    .size = PLM_SD_BUFFER_SIZE,
+    .fill = 0
+};
+
+static uint8_t b2[PLM_SD_BUFFER_SIZE];
+static PLM_BUFFER buffer2 = {
+    .bytes = b2,
+    .size = PLM_SD_BUFFER_SIZE,
+    .fill = 0
+};
+
+static uint8_t b3[PLM_XB_BUFFER_SIZE];
+static PLM_BUFFER buffer3 = {
+    .bytes = b3,
+    .size = PLM_XB_BUFFER_SIZE,
+    .fill = 0
+};
+
+static uint8_t b4[PLM_XB_BUFFER_SIZE];
+static PLM_BUFFER buffer4 = {
+    .bytes = b4,
+    .size = PLM_XB_BUFFER_SIZE,
+    .fill = 0
+};
+
+PLM_DBL_BUFFER SD_DB = {
+    .buffers = { &buffer1, &buffer2 },
+    .write_index = 0,
+    .tx_cplt = 1
+};
+
+PLM_DBL_BUFFER XB_DB = {
+    .buffers = { &buffer3, &buffer4 },
+    .write_index = 0,
+    .tx_cplt = 1
+};
+
 static uint8_t append_byte(PLM_BUFFER* buffer, uint8_t byte);
 
 PLM_RES plm_data_record_param(PLM_BUFFER* buffer, CAN_INFO_STRUCT* param) {
