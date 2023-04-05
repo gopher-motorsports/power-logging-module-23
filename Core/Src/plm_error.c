@@ -35,13 +35,11 @@ void plm_err_blink(void) {
     static uint32_t last_blink = 0;
     static uint16_t blinks_remaining = 0;
 
-    if (err_led_port == NULL) return;
-
     if (err_code == PLM_OK && blinks_remaining == 0) {
         // no error to show
         HAL_GPIO_WritePin(err_led_port, err_led_pin, GPIO_PIN_RESET);
     } else if (blinks_remaining == 0) {
-        // not ok, start blinking
+        // not ok, start/restart blinking
         uint32_t tick = osKernelSysTick();
         if (tick - last_blink >= ERR_BLINK_DELAY) {
             blinks_remaining = err_code * 2;
