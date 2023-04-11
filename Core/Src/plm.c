@@ -38,8 +38,6 @@ extern PLM_DBL_BUFFER XB_DB;
 void plm_init(void) {
     plm_err_reset();
 
-    gsense_init(&hcan1, &hadc1, NULL, &hadc3, &htim10, LED_USB_GPIO_Port, LED_USB_Pin);
-
     S8 err = init_can(GCAN0, &hcan1, PLM_ID, BXTYPE_MASTER);
     err |= init_can(GCAN1, &hcan2, PLM_ID, BXTYPE_MASTER);
     err |= init_can(GCAN2, &hcan3, PLM_ID, BXTYPE_MASTER);
@@ -49,6 +47,8 @@ void plm_init(void) {
         HAL_Delay(PLM_DELAY_RESTART);
         NVIC_SystemReset();
     }
+
+    gsense_init(&hcan1, &hadc1, NULL, &hadc3, &htim10, LED_USB_GPIO_Port, LED_USB_Pin);
 
     // enable all power channel switches
     for (size_t i = 0; i < NUM_OF_CHANNELS; i++) {
@@ -105,19 +105,22 @@ void plm_collect_data(void) {
         taskEXIT_CRITICAL();
     }
 
-    // check gcan parameters
-    for (uint8_t i = 1; i < NUM_OF_PARAMETERS; i++) {
-        CAN_INFO_STRUCT* param = (CAN_INFO_STRUCT*)(PARAMETERS[i]);
+    // move gcan parameters to buffers only while USB is not connected
+    uint8_t usb_connected = hUsbDeviceFS.dev_state == USBD_STATE_CONFIGURED;
+    if (!usb_connected) {
+        for (uint8_t i = 1; i < NUM_OF_PARAMETERS; i++) {
+            CAN_INFO_STRUCT* param = (CAN_INFO_STRUCT*)(PARAMETERS[i]);
 
-        if (param->last_rx > last_log[i]) {
-            // parameter has been updated
-            PLM_RES res = plm_data_record_param(SD_DB.buffers[SD_DB.write_index], param);
-            if (res != PLM_OK) plm_err_set(res);
+            if (param->last_rx > last_log[i]) {
+                // parameter has been updated
+                PLM_RES res = plm_data_record_param(SD_DB.buffers[SD_DB.write_index], param);
+                if (res != PLM_OK) plm_err_set(res);
 
-            res = plm_data_record_param(XB_DB.buffers[XB_DB.write_index], param);
-            if (res != PLM_OK) plm_err_set(res);
+                res = plm_data_record_param(XB_DB.buffers[XB_DB.write_index], param);
+                if (res != PLM_OK) plm_err_set(res);
 
-            last_log[i] = param->last_rx;
+                last_log[i] = param->last_rx;
+            }
         }
     }
 
