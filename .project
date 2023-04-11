@@ -40,5 +40,10 @@
 			<type>2</type>
 			<locationURI>$%7BPARENT-1-PROJECT_LOC%7D/gophercan-lib</locationURI>
 		</link>
+		<link>
+			<name>Core/gophercan-lib</name>
+			<type>2</type>
+			<location>/Users/chrisdixon/STM32CubeIDE/workspace_1.10.1/gophercan-lib</location>
+		</link>
 	</linkedResources>
 </projectDescription>
