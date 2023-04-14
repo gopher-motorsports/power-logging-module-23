@@ -35,6 +35,8 @@ extern TIM_HandleTypeDef htim10;
 extern PLM_DBL_BUFFER SD_DB;
 extern PLM_DBL_BUFFER XB_DB;
 
+#define Xb_Log_Limit 200
+
 void plm_init(void) {
     plm_err_reset();
 
@@ -122,7 +124,7 @@ void plm_collect_data(void) {
         }
 
         if (param->last_rx > xb_last_log[i]){
-        	if(osKernelSysTick() - xb_last_log[i] > 200){
+        	if(osKernelSysTick() - xb_last_log[i] > Xb_Log_Limit){
         		 res = plm_data_record_param(XB_DB.buffers[XB_DB.write_index], param);
         		 if (res != PLM_OK) plm_err_set(res);
         		 xb_last_log[i] = param->last_rx;
