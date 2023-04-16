@@ -12,8 +12,7 @@
 #include "plm_error.h"
 #include "GopherCAN.h"
 
-#define NUM_OF_CHANNELS 8
-//#define NUM_OF_CHANNELS 11
+#define NUM_OF_CHANNELS 11
 
 typedef struct {
     FLOAT_CAN_STRUCT* parameter;

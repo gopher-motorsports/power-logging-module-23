@@ -93,6 +93,12 @@ void Error_Handler(void);
 #define EN_12V_4_GPIO_Port GPIOB
 #define EN_12V_3_Pin GPIO_PIN_11
 #define EN_12V_3_GPIO_Port GPIOF
+#define EN_12V_2_Pin GPIO_PIN_14
+#define EN_12V_2_GPIO_Port GPIOF
+#define EN_12V_1_Pin GPIO_PIN_15
+#define EN_12V_1_GPIO_Port GPIOF
+#define EN_12V_0_Pin GPIO_PIN_0
+#define EN_12V_0_GPIO_Port GPIOG
 #define EN_5V_3_Pin GPIO_PIN_7
 #define EN_5V_3_GPIO_Port GPIOE
 #define USART1_TX_Pin GPIO_PIN_14

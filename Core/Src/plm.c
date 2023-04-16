@@ -5,6 +5,9 @@
  *      Author: jonathan
  */
 
+// TODO needs metadata
+// TODO needs new checksum scheme
+
 #include <stdint.h>
 #include <stdio.h>
 #include "plm.h"

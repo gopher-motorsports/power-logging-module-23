@@ -253,7 +253,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.LSIState = RCC_LSI_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-  RCC_OscInitStruct.PLL.PLLM = 4;
+  RCC_OscInitStruct.PLL.PLLM = 12;
   RCC_OscInitStruct.PLL.PLLN = 192;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
   RCC_OscInitStruct.PLL.PLLQ = 8;
@@ -590,7 +590,9 @@ static void MX_RTC_Init(void)
 {
 
   /* USER CODE BEGIN RTC_Init 0 */
-
+  // part of the bad solution
+  RTC_TimeTypeDef old_time = {0};
+  RTC_DateTypeDef old_date = {0};
   /* USER CODE END RTC_Init 0 */
 
   RTC_TimeTypeDef sTime = {0};
@@ -616,6 +618,13 @@ static void MX_RTC_Init(void)
 
   /* USER CODE BEGIN Check_RTC_BKUP */
 
+  // this is a dumb solution to the problem of the auto-gen code resetting the time and
+  // date on every MCU reset
+
+  // get the time and date stored before reseting
+  HAL_RTC_GetTime(&hrtc, &old_time, RTC_FORMAT_BIN);
+  HAL_RTC_GetDate(&hrtc, &old_date, RTC_FORMAT_BIN);
+
   /* USER CODE END Check_RTC_BKUP */
 
   /** Initialize RTC and set the Time and Date
@@ -639,6 +648,19 @@ static void MX_RTC_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN RTC_Init 2 */
+
+  // part of the bad solution
+
+  // put the old time and date back to what it used to be
+  if (HAL_RTC_SetTime(&hrtc, &old_time, RTC_FORMAT_BIN) != HAL_OK)
+  {
+	Error_Handler();
+  }
+  if (HAL_RTC_SetDate(&hrtc, &old_date, RTC_FORMAT_BIN) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
 
   /* USER CODE END RTC_Init 2 */
 
@@ -853,8 +875,8 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
-  __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOG_CLK_ENABLE();
+  __HAL_RCC_GPIOD_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOE, EN_5V_0_Pin|EN_5V_1_Pin|EN_5V_2_Pin|EN_5V_3_Pin, GPIO_PIN_RESET);
@@ -863,11 +885,11 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOB, EN_12V_6_Pin|EN_12V_5_Pin|EN_12V_4_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(EN_12V_3_GPIO_Port, EN_12V_3_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOF, EN_12V_3_Pin|EN_12V_2_Pin|EN_12V_1_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOG, LED_USB_Pin|LED_MEMORY_Pin|LED_STORAGE_Pin|LED_FAULT_Pin
-                          |LED_STATUS_Pin|LED_OVERCURRENT_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOG, EN_12V_0_Pin|LED_USB_Pin|LED_MEMORY_Pin|LED_STORAGE_Pin
+                          |LED_FAULT_Pin|LED_STATUS_Pin|LED_OVERCURRENT_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pins : EN_5V_0_Pin EN_5V_1_Pin EN_5V_2_Pin EN_5V_3_Pin */
   GPIO_InitStruct.Pin = EN_5V_0_Pin|EN_5V_1_Pin|EN_5V_2_Pin|EN_5V_3_Pin;
@@ -883,27 +905,27 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : EN_12V_3_Pin */
-  GPIO_InitStruct.Pin = EN_12V_3_Pin;
+  /*Configure GPIO pins : EN_12V_3_Pin EN_12V_2_Pin EN_12V_1_Pin */
+  GPIO_InitStruct.Pin = EN_12V_3_Pin|EN_12V_2_Pin|EN_12V_1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(EN_12V_3_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : EN_12V_0_Pin LED_USB_Pin LED_MEMORY_Pin LED_STORAGE_Pin
+                           LED_FAULT_Pin LED_STATUS_Pin LED_OVERCURRENT_Pin */
+  GPIO_InitStruct.Pin = EN_12V_0_Pin|LED_USB_Pin|LED_MEMORY_Pin|LED_STORAGE_Pin
+                          |LED_FAULT_Pin|LED_STATUS_Pin|LED_OVERCURRENT_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
 
   /*Configure GPIO pin : SDMMC1_CD_Pin */
   GPIO_InitStruct.Pin = SDMMC1_CD_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(SDMMC1_CD_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : LED_USB_Pin LED_MEMORY_Pin LED_STORAGE_Pin LED_FAULT_Pin
-                           LED_STATUS_Pin LED_OVERCURRENT_Pin */
-  GPIO_InitStruct.Pin = LED_USB_Pin|LED_MEMORY_Pin|LED_STORAGE_Pin|LED_FAULT_Pin
-                          |LED_STATUS_Pin|LED_OVERCURRENT_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
 
 }
 

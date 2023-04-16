@@ -10,6 +10,8 @@
 #include "fatfs.h"
 #include <stdio.h>
 
+#define ZERO_YEAR 1970
+
 extern RTC_HandleTypeDef hrtc;
 
 PLM_RES plm_sd_init(void) {
@@ -31,11 +33,15 @@ PLM_RES plm_sd_init(void) {
     RTC_DateTypeDef date;
     HAL_RTC_GetTime(&hrtc, &time, RTC_FORMAT_BIN);
     HAL_RTC_GetDate(&hrtc, &date, RTC_FORMAT_BIN);
-    sprintf(filename, "PLM_%04u-%02u-%02u-%02u-%02u-%02u.gdat", date.Year, date.Month, date.Date, time.Hours, time.Minutes, time.Seconds);
+    sprintf(filename, "PLM_%04u-%02u-%02u-%02u-%02u-%02u.gdat", date.Year + ZERO_YEAR, date.Month, date.Date, time.Hours, time.Minutes, time.Seconds);
 
     // open data file
     // file is created if it doesn't exist
     res = f_open(&SDFile, filename, FA_OPEN_APPEND | FA_WRITE);
+    if (res != FR_OK) return PLM_ERR_SD_INIT;
+
+    // add the metadata to the front of the message (just the filename again)
+    res = f_printf(&SDFile, "%s:\n", filename);
     if (res != FR_OK) return PLM_ERR_SD_INIT;
 
     return PLM_OK;
