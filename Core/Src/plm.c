@@ -88,7 +88,8 @@ void plm_service_can(void) {
 }
 
 void plm_collect_data(void) {
-    static uint32_t last_log[NUM_OF_PARAMETERS] = {0};
+    static uint32_t sd_last_log[NUM_OF_PARAMETERS] = {0};
+    static uint32_t xb_last_send[NUM_OF_PARAMETERS] = {0};
 
     // swap buffers after transfers are complete
     // critical section entry/exit is fast and fine for a quick swap
@@ -113,16 +114,22 @@ void plm_collect_data(void) {
     if (!usb_connected) {
         for (uint8_t i = 1; i < NUM_OF_PARAMETERS; i++) {
             CAN_INFO_STRUCT* param = (CAN_INFO_STRUCT*)(PARAMETERS[i]);
+            uint32_t tick = osKernelSysTick();
 
-            if (param->last_rx > last_log[i]) {
+            if (param->last_rx > sd_last_log[i]) {
                 // parameter has been updated
                 PLM_RES res = plm_data_record_param(SD_DB.buffers[SD_DB.write_index], param);
                 if (res != PLM_OK) plm_err_set(res);
 
-                res = plm_data_record_param(XB_DB.buffers[XB_DB.write_index], param);
+                sd_last_log[i] = tick;
+            }
+
+            if (param->last_rx > xb_last_send[i] && tick - xb_last_send[i] > PLM_XB_TX_DELAY) {
+                // parameter has been updated and hasn't been sent in a while
+                PLM_RES res = plm_data_record_param(XB_DB.buffers[XB_DB.write_index], param);
                 if (res != PLM_OK) plm_err_set(res);
 
-                last_log[i] = param->last_rx;
+                xb_last_send[i] = tick;
             }
         }
     }
