@@ -175,7 +175,11 @@ void plm_store_data(void) {
                         fs_ready = 0;
                         plm_sd_deinit();
                         plm_err_set(res);
-                    } else SD_DB.tx_cplt = 1;
+                    } else {
+                        // successful write
+                        SD_DB.tx_cplt = 1;
+                        HAL_GPIO_TogglePin(LED_STORAGE_GPIO_Port, LED_STORAGE_Pin);
+                    }
                 } else SD_DB.tx_cplt = 1;
             }
         }
