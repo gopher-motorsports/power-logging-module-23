@@ -54,6 +54,8 @@ PLM_RES plm_data_record_param(PLM_BUFFER* buffer, CAN_INFO_STRUCT* param) {
     uint16_t id = param->ID;
     void* data = NULL;
     uint8_t checksum = 0;
+    U8* bytes;
+    U8 i;
 
     // make sure packet will fit
     uint8_t packet_size = 1 + sizeof(timestamp) + sizeof(id) + param->SIZE + sizeof(checksum);
@@ -97,27 +99,31 @@ PLM_RES plm_data_record_param(PLM_BUFFER* buffer, CAN_INFO_STRUCT* param) {
     buffer->bytes[buffer->fill++] = START_BYTE;
     checksum += START_BYTE;
 
-    // append components MSB first
-    for (size_t i = sizeof(timestamp); i > 0; i--)
-    {
-        append_byte(buffer, ((U8*)&timestamp)[i - 1]);
-        checksum += ((U8*)&timestamp)[i - 1];
-    }
+    // append components with MSB first
+	bytes = (U8*) &(timestamp);
+	for (i = sizeof(timestamp); i > 0; i--)
+	{
+		append_byte(buffer, bytes[i - 1]);
+		checksum += bytes[i - 1];
+	}
 
-    for (size_t i = sizeof(id); i > 0; i--)
-    {
-        append_byte(buffer, ((U8*)&id)[i - 1]);
-        checksum += ((U8*)&id)[i - 1];
-    }
+	bytes = (U8*) &(id);
+	for (i = sizeof(id); i > 0; i--)
+	{
+		append_byte(buffer, bytes[i - 1]);
+		checksum += bytes[i - 1];
+	}
 
-    for (size_t i = param->SIZE; i > 0; i--)
-    {
-        append_byte(buffer, ((U8*)&data)[i - 1]);
-        checksum += ((U8*)&data)[i - 1];
-    }
+	bytes = (U8*) data;
+	for (i = param->SIZE; i > 0; i--)
+	{
+		append_byte(buffer, bytes[i - 1]);
+		checksum += bytes[i - 1];
+	}
 
-    append_byte(buffer, checksum);
-
+	// NOTE: if there is an escape character in the checksum that is
+	// not counted towards the total checksum
+	append_byte(buffer, checksum);
     return PLM_OK;
 }
 

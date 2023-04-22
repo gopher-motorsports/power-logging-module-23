@@ -5,9 +5,6 @@
  *      Author: jonathan
  */
 
-// TODO needs metadata
-// TODO needs new checksum scheme
-
 #include <stdint.h>
 #include <stdio.h>
 #include "plm.h"
@@ -91,6 +88,14 @@ void plm_collect_data(void) {
     static uint32_t sd_last_log[NUM_OF_PARAMETERS] = {0};
     static uint32_t xb_last_send[NUM_OF_PARAMETERS] = {0};
 
+    // dont log anything if there is no voltage at 5V or VBat
+    if (plmVbatVoltage_V.data <= MIN_VBAT_VOLTAGE_V &&
+    		plm5VVoltage_V.data <= MIN_5V_VOLTAGE_V)
+    {
+    	osDelay(PLM_DELAY_DATA);
+    	return;
+    }
+
     // swap buffers after transfers are complete
     // critical section entry/exit is fast and fine for a quick swap
     if (SD_DB.tx_cplt) {
@@ -141,6 +146,14 @@ void plm_store_data(void) {
     // if SD is ready for FatFs interaction
     static uint8_t fs_ready = 0;
 
+    // dont log if there is nothing in the buffers to log
+    if (SD_DB.buffers[0]->fill == 0 &&
+    		SD_DB.buffers[1]->fill == 0)
+    {
+    	osDelay(PLM_SD_WAIT_TIME);
+    	return;
+    }
+
     // check if device is connected and ready to interact via USB
     uint8_t usb_connected = hUsbDeviceFS.dev_state == USBD_STATE_CONFIGURED;
 
@@ -148,7 +161,8 @@ void plm_store_data(void) {
     // USB callbacks are in USB_DEVICE/App/usbd_storage_if.c
     // uses the FatFs driver in FATFS/Target/sd_diskio.c
     // WARNING: if USB is connected for too long while logging, buffer will eventually fill
-    if (usb_connected && fs_ready) {
+    //if (usb_connected && fs_ready) {
+	if (usb_connected && fs_ready) {
         plm_sd_deinit();
         fs_ready = 0;
     }

@@ -40,9 +40,13 @@ PLM_RES plm_sd_init(void) {
     res = f_open(&SDFile, filename, FA_OPEN_APPEND | FA_WRITE);
     if (res != FR_OK) return PLM_ERR_SD_INIT;
 
-    // add the metadata to the front of the message (just the filename again)
-    res = f_printf(&SDFile, "%s:\n", filename);
-    if (res != FR_OK) return PLM_ERR_SD_INIT;
+    // add the metadata to the front of the message. This is the same metadata
+    // as the DLM because I am lazy
+    char metadata[] = "/dlm_data_YYYYMMDD_HHMMSS.gdat";
+    sprintf(metadata, "/dlm_data_%04d%02d%02d_%02d%02d%02d.gdat", date.Year + ZERO_YEAR,
+    		date.Month, date.Date, time.Hours, time.Minutes, time.Seconds);
+    res = f_printf(&SDFile, "%s:\n", metadata);
+    if (res <= 0) return PLM_ERR_SD_INIT;
 
     return PLM_OK;
 }

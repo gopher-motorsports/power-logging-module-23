@@ -314,7 +314,7 @@ static void MX_ADC1_Init(void)
   hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
   hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc1.Init.NbrOfConversion = 10;
+  hadc1.Init.NbrOfConversion = 12;
   hadc1.Init.DMAContinuousRequests = ENABLE;
   hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
   if (HAL_ADC_Init(&hadc1) != HAL_OK)
@@ -412,6 +412,24 @@ static void MX_ADC1_Init(void)
   {
     Error_Handler();
   }
+
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+  */
+  sConfig.Channel = ADC_CHANNEL_12;
+  sConfig.Rank = ADC_REGULAR_RANK_11;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+  */
+  sConfig.Channel = ADC_CHANNEL_15;
+  sConfig.Rank = ADC_REGULAR_RANK_12;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
   /* USER CODE BEGIN ADC1_Init 2 */
 
   /* USER CODE END ADC1_Init 2 */
@@ -487,7 +505,7 @@ static void MX_CAN1_Init(void)
   /* USER CODE END CAN1_Init 1 */
   hcan1.Instance = CAN1;
   hcan1.Init.Prescaler = 6;
-  hcan1.Init.Mode = CAN_MODE_LOOPBACK;
+  hcan1.Init.Mode = CAN_MODE_NORMAL;
   hcan1.Init.SyncJumpWidth = CAN_SJW_1TQ;
   hcan1.Init.TimeSeg1 = CAN_BS1_6TQ;
   hcan1.Init.TimeSeg2 = CAN_BS2_1TQ;
@@ -524,7 +542,7 @@ static void MX_CAN2_Init(void)
   /* USER CODE END CAN2_Init 1 */
   hcan2.Instance = CAN2;
   hcan2.Init.Prescaler = 6;
-  hcan2.Init.Mode = CAN_MODE_LOOPBACK;
+  hcan2.Init.Mode = CAN_MODE_NORMAL;
   hcan2.Init.SyncJumpWidth = CAN_SJW_1TQ;
   hcan2.Init.TimeSeg1 = CAN_BS1_6TQ;
   hcan2.Init.TimeSeg2 = CAN_BS2_1TQ;
@@ -561,7 +579,7 @@ static void MX_CAN3_Init(void)
   /* USER CODE END CAN3_Init 1 */
   hcan3.Instance = CAN3;
   hcan3.Init.Prescaler = 6;
-  hcan3.Init.Mode = CAN_MODE_LOOPBACK;
+  hcan3.Init.Mode = CAN_MODE_NORMAL;
   hcan3.Init.SyncJumpWidth = CAN_SJW_1TQ;
   hcan3.Init.TimeSeg1 = CAN_BS1_6TQ;
   hcan3.Init.TimeSeg2 = CAN_BS2_1TQ;

@@ -4,7 +4,7 @@ module_name: "power-logging-module-23"
 buckets:
     current_channels:
         # NOTE: frequency will be converted to an integer number of ms for a delay
-        frequency_hz: 250
+        frequency_hz: 10
         parameters:
             # these must directly be a variable defined in GopherCAN
             vbatChan0Current_A:
@@ -50,6 +50,14 @@ buckets:
             fiveVChan3Current_A:
                 ADC: ADC3_IN9
                 sensor: five_volt_channel_current
+                samples_buffered: 1
+            plmVbatVoltage_V:
+                ADC: ADC1_IN12
+                sensor: vbat_voltage_reading
+                samples_buffered: 1
+            plm5VVoltage_V:
+                ADC: ADC1_IN15
+                sensor: five_volt_voltage_reading
                 samples_buffered: 1
 
 

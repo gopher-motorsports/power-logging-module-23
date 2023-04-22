@@ -69,6 +69,8 @@ void Error_Handler(void);
 #define ADC_5V_1_GPIO_Port GPIOC
 #define ADC_5V_2_Pin GPIO_PIN_1
 #define ADC_5V_2_GPIO_Port GPIOC
+#define VBAT_MEAS_Pin GPIO_PIN_2
+#define VBAT_MEAS_GPIO_Port GPIOC
 #define ADC_12V_0_Pin GPIO_PIN_0
 #define ADC_12V_0_GPIO_Port GPIOA
 #define ADC_12V_1_Pin GPIO_PIN_1
@@ -85,6 +87,8 @@ void Error_Handler(void);
 #define ADC_12V_6_GPIO_Port GPIOA
 #define ADC_5V_0_Pin GPIO_PIN_7
 #define ADC_5V_0_GPIO_Port GPIOA
+#define FIVEV_MEAS_Pin GPIO_PIN_5
+#define FIVEV_MEAS_GPIO_Port GPIOC
 #define EN_12V_6_Pin GPIO_PIN_0
 #define EN_12V_6_GPIO_Port GPIOB
 #define EN_12V_5_Pin GPIO_PIN_1
