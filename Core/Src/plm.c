@@ -48,7 +48,7 @@ void plm_init(void) {
         NVIC_SystemReset();
     }
 
-    gsense_init(&hcan1, &hadc1, NULL, &hadc3, &htim10, LED_USB_GPIO_Port, LED_USB_Pin);
+    gsense_init(&hcan1, &hadc1, NULL, &hadc3, LED_USB_GPIO_Port, LED_USB_Pin);
 
     // enable all power channel switches
     for (size_t i = 0; i < NUM_OF_CHANNELS; i++) {

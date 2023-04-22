@@ -1,5 +1,6 @@
 
 module_name: "power-logging-module-23"
+use_hw_timer: false # Disable hw timer based DMA update
 
 buckets:
     current_channels:
@@ -10,54 +11,54 @@ buckets:
             vbatChan0Current_A:
                 ADC: ADC1_IN0
                 sensor: vbat_channel_current
-                samples_buffered: 1
+                samples_buffered: 10
             vbatChan1Current_A:
                 ADC: ADC1_IN1
                 sensor: vbat_channel_current
-                samples_buffered: 1
+                samples_buffered: 10
             vbatChan2Current_A:
                 ADC: ADC1_IN2
                 sensor: vbat_channel_current
-                samples_buffered: 1
+                samples_buffered: 10
             vbatChan3Current_A:
                 ADC: ADC1_IN3
                 sensor: vbat_channel_current
-                samples_buffered: 1
+                samples_buffered: 10
             vbatChan4Current_A:
                 ADC: ADC1_IN4
                 sensor: vbat_channel_current
-                samples_buffered: 1
+                samples_buffered: 10
             vbatChan5Current_A:
                 ADC: ADC1_IN5
                 sensor: vbat_channel_current
-                samples_buffered: 1
+                samples_buffered: 10
             vbatChan6Current_A:
                 ADC: ADC1_IN6
                 sensor: vbat_channel_current
-                samples_buffered: 1
+                samples_buffered: 10
             fiveVChan0Current_A:
                 ADC: ADC1_IN7
                 sensor: five_volt_channel_current
-                samples_buffered: 1
+                samples_buffered: 10
             fiveVChan1Current_A:
                 ADC: ADC1_IN10
                 sensor: five_volt_channel_current
-                samples_buffered: 1
+                samples_buffered: 10
             fiveVChan2Current_A:
                 ADC: ADC1_IN11
                 sensor: five_volt_channel_current
-                samples_buffered: 1
+                samples_buffered: 10
             fiveVChan3Current_A:
                 ADC: ADC3_IN9
                 sensor: five_volt_channel_current
-                samples_buffered: 1
+                samples_buffered: 10
             plmVbatVoltage_V:
                 ADC: ADC1_IN12
                 sensor: vbat_voltage_reading
-                samples_buffered: 1
+                samples_buffered: 10
             plm5VVoltage_V:
                 ADC: ADC1_IN15
                 sensor: five_volt_voltage_reading
-                samples_buffered: 1
+                samples_buffered: 10
 
 

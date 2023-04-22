@@ -59,8 +59,6 @@ SD_HandleTypeDef hsd1;
 DMA_HandleTypeDef hdma_sdmmc1_rx;
 DMA_HandleTypeDef hdma_sdmmc1_tx;
 
-TIM_HandleTypeDef htim10;
-
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 UART_HandleTypeDef huart3;
@@ -90,7 +88,6 @@ static void MX_CAN3_Init(void);
 static void MX_USART3_UART_Init(void);
 static void MX_RTC_Init(void);
 static void MX_ADC1_Init(void);
-static void MX_TIM10_Init(void);
 static void MX_ADC3_Init(void);
 void plm_task_store_data(void const * argument);
 void plm_task_service_can(void const * argument);
@@ -161,7 +158,6 @@ int main(void)
   MX_USART3_UART_Init();
   MX_RTC_Init();
   MX_ADC1_Init();
-  MX_TIM10_Init();
   MX_ADC3_Init();
   /* USER CODE BEGIN 2 */
   plm_init();
@@ -713,37 +709,6 @@ static void MX_SDMMC1_SD_Init(void)
 }
 
 /**
-  * @brief TIM10 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_TIM10_Init(void)
-{
-
-  /* USER CODE BEGIN TIM10_Init 0 */
-
-  /* USER CODE END TIM10_Init 0 */
-
-  /* USER CODE BEGIN TIM10_Init 1 */
-
-  /* USER CODE END TIM10_Init 1 */
-  htim10.Instance = TIM10;
-  htim10.Init.Prescaler = 0;
-  htim10.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim10.Init.Period = 65535;
-  htim10.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  htim10.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-  if (HAL_TIM_Base_Init(&htim10) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN TIM10_Init 2 */
-
-  /* USER CODE END TIM10_Init 2 */
-
-}
-
-/**
   * @brief USART1 Initialization Function
   * @param None
   * @retval None
@@ -1096,9 +1061,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     HAL_IncTick();
   }
   /* USER CODE BEGIN Callback 1 */
-  else {
-    DAQ_TimerCallback(htim);
-  }
   /* USER CODE END Callback 1 */
 }
 
