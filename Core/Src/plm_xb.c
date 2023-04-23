@@ -13,11 +13,19 @@ extern UART_HandleTypeDef huart2;
 
 extern PLM_DBL_BUFFER XB_DB;
 
+static uint8_t tx_in_progress = 0;
+
 PLM_RES plm_xb_send(uint8_t* buffer, uint16_t size) {
+    if (tx_in_progress) return PLM_OK;
+
     HAL_StatusTypeDef res = HAL_UART_Transmit_DMA(&huart2, buffer, size);
-    return res == HAL_OK ? PLM_OK : PLM_ERR_XB_TX;
+    if (res == HAL_OK) {
+        tx_in_progress = 1;
+        return PLM_OK;
+    } else return PLM_ERR_XB_TX;
 }
 
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef* huart) {
+    tx_in_progress = 0;
     XB_DB.tx_cplt = 1;
 }

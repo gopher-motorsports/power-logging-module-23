@@ -19,10 +19,12 @@
 #define PLM_DELAY_POWER 10
 #define PLM_DELAY_RESTART 1000
 
-#define MIN_5V_VOLTAGE_V 2.0f
-#define MIN_VBAT_VOLTAGE_V 2.0f
+// ignores voltage check in plm_collect_data
+// terminates the plm_monitor_current thread
+//#define PLM_DEV_MODE
 
-// define to automatically generate and transmit GCAN data
+// automatically generates and transmits GCAN data
+// intended for loopback mode
 //#define PLM_SIMULATE_DATA
 
 void plm_init(void);

@@ -193,11 +193,11 @@ int main(void)
   PLM_TransmitDatHandle = osThreadCreate(osThread(PLM_TransmitDat), NULL);
 
   /* definition and creation of PLM_Heartbeat */
-  osThreadDef(PLM_Heartbeat, plm_task_heartbeat, osPriorityNormal, 0, 256);
+  osThreadDef(PLM_Heartbeat, plm_task_heartbeat, osPriorityLow, 0, 256);
   PLM_HeartbeatHandle = osThreadCreate(osThread(PLM_Heartbeat), NULL);
 
   /* definition and creation of PLM_SimulateDat */
-  osThreadDef(PLM_SimulateDat, plm_task_simulate_data, osPriorityNormal, 0, 512);
+  osThreadDef(PLM_SimulateDat, plm_task_simulate_data, osPriorityLow, 0, 512);
   PLM_SimulateDatHandle = osThreadCreate(osThread(PLM_SimulateDat), NULL);
 
   /* definition and creation of PLM_CollectData */

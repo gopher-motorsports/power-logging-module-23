@@ -88,10 +88,14 @@ void plm_collect_data(void) {
     static uint32_t sd_last_log[NUM_OF_PARAMETERS] = {0};
     static uint32_t xb_last_send[NUM_OF_PARAMETERS] = {0};
 
-    // dont log anything if there is no voltage at 5V or VBat
-    if (plmVbatVoltage_V.data <= MIN_VBAT_VOLTAGE_V &&
-    		plm5VVoltage_V.data <= MIN_5V_VOLTAGE_V)
-    {
+    uint8_t usb_connected = hUsbDeviceFS.dev_state == USBD_STATE_CONFIGURED;
+    uint8_t voltage_ok = plmVbatVoltage_V.data >= MIN_VBAT_VOLTAGE_V && plm5VVoltage_V.data >= MIN_5V_VOLTAGE_V;
+#ifdef PLM_DEV_MODE
+    voltage_ok = 1;
+#endif
+
+    // must have usb disconnected and minimum 5V and Vbat voltages
+    if (usb_connected || !voltage_ok) {
     	osDelay(PLM_DELAY_DATA);
     	return;
     }
@@ -114,28 +118,22 @@ void plm_collect_data(void) {
         taskEXIT_CRITICAL();
     }
 
-    // move gcan parameters to buffers only while USB is not connected
-    uint8_t usb_connected = hUsbDeviceFS.dev_state == USBD_STATE_CONFIGURED;
-    if (!usb_connected) {
-        for (uint8_t i = 1; i < NUM_OF_PARAMETERS; i++) {
-            CAN_INFO_STRUCT* param = (CAN_INFO_STRUCT*)(PARAMETERS[i]);
-            uint32_t tick = osKernelSysTick();
+    for (uint8_t i = 1; i < NUM_OF_PARAMETERS; i++) {
+        CAN_INFO_STRUCT* param = (CAN_INFO_STRUCT*)(PARAMETERS[i]);
+        uint32_t tick = osKernelSysTick();
 
-            if (param->last_rx > sd_last_log[i]) {
-                // parameter has been updated
-                PLM_RES res = plm_data_record_param(SD_DB.buffers[SD_DB.write_index], param);
-                if (res != PLM_OK) plm_err_set(res);
+        if (param->last_rx > sd_last_log[i]) {
+            // parameter has been updated
+            PLM_RES res = plm_data_record_param(SD_DB.buffers[SD_DB.write_index], param);
+            if (res != PLM_OK) plm_err_set(res);
+            sd_last_log[i] = tick;
+        }
 
-                sd_last_log[i] = tick;
-            }
-
-            if (param->last_rx > xb_last_send[i] && tick - xb_last_send[i] > PLM_XB_TX_DELAY) {
-                // parameter has been updated and hasn't been sent in a while
-                PLM_RES res = plm_data_record_param(XB_DB.buffers[XB_DB.write_index], param);
-                if (res != PLM_OK) plm_err_set(res);
-
-                xb_last_send[i] = tick;
-            }
+        if (param->last_rx > xb_last_send[i] && tick - xb_last_send[i] > PLM_XB_TX_DELAY) {
+            // parameter has been updated and hasn't been sent in a while
+            PLM_RES res = plm_data_record_param(XB_DB.buffers[XB_DB.write_index], param);
+            if (res != PLM_OK) plm_err_set(res);
+            xb_last_send[i] = tick;
         }
     }
 
@@ -146,22 +144,12 @@ void plm_store_data(void) {
     // if SD is ready for FatFs interaction
     static uint8_t fs_ready = 0;
 
-    // dont log if there is nothing in the buffers to log
-    if (SD_DB.buffers[0]->fill == 0 &&
-    		SD_DB.buffers[1]->fill == 0)
-    {
-    	osDelay(PLM_SD_WAIT_TIME);
-    	return;
-    }
-
     // check if device is connected and ready to interact via USB
     uint8_t usb_connected = hUsbDeviceFS.dev_state == USBD_STATE_CONFIGURED;
 
     // prevent USB access and FatFs interaction at the same time
     // USB callbacks are in USB_DEVICE/App/usbd_storage_if.c
     // uses the FatFs driver in FATFS/Target/sd_diskio.c
-    // WARNING: if USB is connected for too long while logging, buffer will eventually fill
-    //if (usb_connected && fs_ready) {
 	if (usb_connected && fs_ready) {
         plm_sd_deinit();
         fs_ready = 0;
@@ -225,6 +213,9 @@ void plm_simulate_data(void) {
 }
 
 void plm_monitor_current(void) {
+#ifdef PLM_DEV_MODE
+    osThreadTerminate(osThreadGetId());
+#endif
     for (size_t i = 0; i < NUM_OF_CHANNELS; i++) {
         PLM_POWER_CHANNEL* channel = POWER_CHANNELS[i];
         plm_power_update_channel(channel);
