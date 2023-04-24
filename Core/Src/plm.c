@@ -37,17 +37,35 @@ extern PLM_DBL_BUFFER XB_DB;
 
 void plm_init(void) {
     plm_err_reset();
+    S8 err = 0;
 
-    S8 err = init_can(GCAN0, &hcan1, PLM_ID, BXTYPE_MASTER);
-    err |= init_can(GCAN1, &hcan2, PLM_ID, BXTYPE_MASTER);
-    err |= init_can(GCAN2, &hcan3, PLM_ID, BXTYPE_MASTER);
+#ifdef PLM_DEV_MODE
+    // put CAN peripherals into loopback to receive simulated data
+    hcan1.Init.Mode = CAN_MODE_LOOPBACK;
+    hcan2.Init.Mode = CAN_MODE_LOOPBACK;
+    hcan3.Init.Mode = CAN_MODE_LOOPBACK;
+    err |= HAL_CAN_Init(&hcan1);
+    err |= HAL_CAN_Init(&hcan2);
+    err |= HAL_CAN_Init(&hcan3);
     if (err) {
         // PLM shouldn't run without CAN
         plm_err_set(PLM_ERR_INIT);
         HAL_Delay(PLM_DELAY_RESTART);
         NVIC_SystemReset();
     }
+#endif
 
+    // GopherCAN
+    err |= init_can(GCAN0, &hcan1, PLM_ID, BXTYPE_MASTER);
+    err |= init_can(GCAN1, &hcan2, PLM_ID, BXTYPE_MASTER);
+    err |= init_can(GCAN2, &hcan3, PLM_ID, BXTYPE_MASTER);
+    if (err) {
+        plm_err_set(PLM_ERR_INIT);
+        HAL_Delay(PLM_DELAY_RESTART);
+        NVIC_SystemReset();
+    }
+
+    // GopherSense
     gsense_init(&hcan1, &hadc1, NULL, &hadc3, LED_USB_GPIO_Port, LED_USB_Pin);
 
     // enable all power channel switches
@@ -56,23 +74,26 @@ void plm_init(void) {
         HAL_GPIO_WritePin(channel->enable_switch_port, channel->enable_switch_pin, GPIO_PIN_SET);
     }
 
+#ifdef PLM_DEV_MODE
     printf("PLM successfully initialized\n");
+#endif
 }
 
 void plm_heartbeat(void) {
-    // heartbeat blink
-    static uint32_t last_blink = 0;
+    static uint32_t last_ex = 0;
     uint32_t tick = osKernelSysTick();
-    if (tick - last_blink >= PLM_DELAY_HEARTBEAT_BLINK) {
+    if (tick - last_ex >= PLM_DELAY_HEARTBEAT_BLINK) {
         HAL_GPIO_TogglePin(LED_STATUS_GPIO_Port, LED_STATUS_Pin);
-        printf("PLM ~ tick: %lu\n", tick);
-        last_blink = tick;
+#ifdef PLM_DEV_MODE
+        printf("PLM (%lu): ⚡\n", tick);
+#endif
+        last_ex = tick;
     }
 
     // blink any active errors
     plm_err_blink();
 
-    osDelay(PLM_DELAY_HEARTBEAT);
+    osDelay(PLM_TASK_DELAY_HEARTBEAT);
 }
 
 void plm_service_can(void) {
@@ -81,7 +102,7 @@ void plm_service_can(void) {
     service_can_tx(&hcan3);
     service_can_rx_buffer();
 
-    osDelay(PLM_DELAY_CAN);
+    osDelay(PLM_TASK_DELAY_CAN);
 }
 
 void plm_collect_data(void) {
@@ -96,7 +117,7 @@ void plm_collect_data(void) {
 
     // must have usb disconnected and minimum 5V and Vbat voltages
     if (usb_connected || !voltage_ok) {
-    	osDelay(PLM_DELAY_DATA);
+    	osDelay(PLM_TASK_DELAY_DATA);
     	return;
     }
 
@@ -137,7 +158,7 @@ void plm_collect_data(void) {
         }
     }
 
-    osDelay(PLM_DELAY_DATA);
+    osDelay(PLM_TASK_DELAY_DATA);
 }
 
 void plm_store_data(void) {
@@ -151,6 +172,9 @@ void plm_store_data(void) {
     // USB callbacks are in USB_DEVICE/App/usbd_storage_if.c
     // uses the FatFs driver in FATFS/Target/sd_diskio.c
 	if (usb_connected && fs_ready) {
+#ifdef PLM_DEV_MODE
+	    printf("PLM (%lu): USB connected\n", osKernelSysTick());
+#endif
         plm_sd_deinit();
         fs_ready = 0;
     }
@@ -187,7 +211,7 @@ void plm_store_data(void) {
         }
     }
 
-    osDelay(PLM_DELAY_SD);
+    osDelay(PLM_TASK_DELAY_SD);
 }
 
 void plm_transmit_data(void) {
@@ -199,23 +223,25 @@ void plm_transmit_data(void) {
         } else XB_DB.tx_cplt = 1;
     }
 
-    osDelay(PLM_DELAY_XB);
+    osDelay(PLM_TASK_DELAY_XB);
 }
 
 void plm_simulate_data(void) {
 #ifndef PLM_SIMULATE_DATA
     osThreadTerminate(osThreadGetId());
 #endif
+
     PLM_RES res = plm_sim_generate_data();
     if (res != PLM_OK) plm_err_set(PLM_ERR_SIM);
 
-    osDelay(PLM_DELAY_SIM);
+    osDelay(PLM_TASK_DELAY_SIM);
 }
 
 void plm_monitor_current(void) {
 #ifdef PLM_DEV_MODE
     osThreadTerminate(osThreadGetId());
 #endif
+
     for (size_t i = 0; i < NUM_OF_CHANNELS; i++) {
         PLM_POWER_CHANNEL* channel = POWER_CHANNELS[i];
         plm_power_update_channel(channel);
@@ -236,5 +262,5 @@ void plm_monitor_current(void) {
         }
     }
 
-    osDelay(PLM_DELAY_POWER);
+    osDelay(PLM_TASK_DELAY_POWER);
 }

@@ -5,6 +5,7 @@
  *      Author: jonathan
  */
 
+#include "plm.h"
 #include "plm_sd.h"
 #include "main.h"
 #include "fatfs.h"
@@ -15,6 +16,10 @@
 extern RTC_HandleTypeDef hrtc;
 
 PLM_RES plm_sd_init(void) {
+#ifdef PLM_DEV_MODE
+    printf("PLM (%lu): initializing SD card\n", osKernelSysTick());
+#endif
+
     // checks that the card is inserted & initializes SD interface
     DSTATUS status = SD_Driver.disk_initialize(0);
     if (status == STA_NOINIT) return PLM_ERR_SD_INIT;
@@ -28,11 +33,11 @@ PLM_RES plm_sd_init(void) {
     if (res != FR_OK) return PLM_ERR_SD_INIT;
 
     // generate filename
-    char filename[] = "PLM_YYYY-MM-DD-hh-mm-ss.gdat";
     RTC_TimeTypeDef time;
     RTC_DateTypeDef date;
     HAL_RTC_GetTime(&hrtc, &time, RTC_FORMAT_BIN);
     HAL_RTC_GetDate(&hrtc, &date, RTC_FORMAT_BIN);
+    char filename[] = "PLM_YYYY-MM-DD-hh-mm-ss.gdat";
     sprintf(filename, "PLM_%04u-%02u-%02u-%02u-%02u-%02u.gdat", date.Year + ZERO_YEAR, date.Month, date.Date, time.Hours, time.Minutes, time.Seconds);
 
     // open data file
@@ -40,18 +45,18 @@ PLM_RES plm_sd_init(void) {
     res = f_open(&SDFile, filename, FA_OPEN_APPEND | FA_WRITE);
     if (res != FR_OK) return PLM_ERR_SD_INIT;
 
-    // add the metadata to the front of the message. This is the same metadata
-    // as the DLM because I am lazy
-    char metadata[] = "/dlm_data_YYYYMMDD_HHMMSS.gdat";
-    sprintf(metadata, "/dlm_data_%04d%02d%02d_%02d%02d%02d.gdat", date.Year + ZERO_YEAR,
-    		date.Month, date.Date, time.Hours, time.Minutes, time.Seconds);
-    res = f_printf(&SDFile, "%s:\n", metadata);
+    // write the filename as metadata
+    res = f_printf(&SDFile, "/%s:\n", filename);
     if (res <= 0) return PLM_ERR_SD_INIT;
 
     return PLM_OK;
 }
 
 void plm_sd_deinit(void) {
+#ifdef PLM_DEV_MODE
+    printf("PLM (%lu): de-initializing SD card\n", osKernelSysTick());
+#endif
+
     // close file and unregister file system
     f_close(&SDFile);
     f_mount(NULL, SDPath, 0);
