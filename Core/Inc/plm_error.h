@@ -26,7 +26,6 @@ typedef enum {
   PLM_ERR_BUFFER_FULL   = 7
 } PLM_RES;
 
-PLM_RES plm_err_status(void);
 void plm_err_set(PLM_RES code);
 void plm_err_reset(void);
 void plm_err_blink(void);
