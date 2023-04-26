@@ -242,11 +242,34 @@ void plm_check_cooling_channels(void) {
 	//ch_12v_0 is Radiator Fan channel
 	//ch_12v_1 is Accumulator Fan channel
 
-	static bool coolingBtnPastState = FALSE;
+
+	//steering wheel data
+	//last rx stops increasing if steering wheel is stalled
 	bool coolingBtnCurrState = swButon3_state.data;
-	if((coolingBtnPastState == FALSE) && (coolingBtnCurrState == TRUE)){
-		ch_12v_0.enabled = !(ch_12v_0.enabled);
-		ch_12v_1.enabled = !(ch_12v_1.enabled);
-		coolingBtnCurrState = coolingBtnPastState;
+	bool lastRx = swButon3_stat.last_rx;
+
+	//margin is 5 seconds to turn the cooling back on, could be changed
+	static uint32_t acceptableRxMargin = 5000;
+
+
+	//local timer to compare against Rx Timer
+	//last_rx should stay in line with this timer
+	static uint32_t timeDelta = HAL_getTick() - currentRxState;
+
+
+	if(coolingBtnCurrState && (timeDelta < acceptableRxMargin)){
+		ch_12v_0.enabled = FALSE;
+		ch_12v_1.enabled = FALSE;
+		HAL_GPIO_WritePin(ch_12v_0.enable_switch_port, ch_12v_0.enable_switch_pin, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(ch_12v_1.enable_switch_port, ch_12v_0.enable_switch_pin, GPIO_PIN_SET);
 	}
+
+	if(timeDelta >= acceptableRxMargin){
+		ch_12v_0.enabled = TRUE;
+		ch_12v_1.enabled = TRUE;
+		HAL_GPIO_WritePin(ch_12v_0.enable_switch_port, ch_12v_0.enable_switch_pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(ch_12v_1.enable_switch_port, ch_12v_1.enable_switch_pin, GPIO_PIN_RESET);
+	}
+
 }
+
