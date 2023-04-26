@@ -10,6 +10,7 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include "plm.h"
 #include "cmsis_os.h"
 #include "main.h"
@@ -134,6 +135,9 @@ void plm_collect_data(void) {
         }
     }
 
+    //included turning on/off cooling channels with collect data task to conserve memory
+    plm_check_cooling_channels();
+
     osDelay(PLM_DELAY_DATA);
 }
 
@@ -232,4 +236,17 @@ void plm_monitor_current(void) {
     }
 
     osDelay(PLM_DELAY_POWER);
+}
+
+void plm_check_cooling_channels(void) {
+	//ch_12v_0 is Radiator Fan channel
+	//ch_12v_1 is Accumulator Fan channel
+
+	static bool coolingBtnPastState = FALSE;
+	bool coolingBtnCurrState = swButon3_state.data;
+	if((coolingBtnPastState == FALSE) && (coolingBtnCurrState == TRUE)){
+		ch_12v_0.enabled = !(ch_12v_0.enabled);
+		ch_12v_1.enabled = !(ch_12v_1.enabled);
+		coolingBtnCurrState = coolingBtnPastState;
+	}
 }

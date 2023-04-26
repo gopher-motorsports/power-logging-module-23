@@ -29,5 +29,7 @@ void plm_store_data(void);
 void plm_transmit_data(void);
 void plm_simulate_data(void);
 void plm_monitor_current(void);
+void plm_check_cooling_channels(void);
+
 
 #endif /* INC_PLM_H_ */
