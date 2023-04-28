@@ -81,7 +81,7 @@ void plm_init(void) {
 
 void plm_heartbeat(void) {
     static uint32_t last_ex = 0;
-    uint32_t tick = osKernelSysTick();
+    uint32_t tick = HAL_GetTick();
     if (tick - last_ex >= PLM_DELAY_HEARTBEAT_BLINK) {
         HAL_GPIO_TogglePin(LED_STATUS_GPIO_Port, LED_STATUS_Pin);
 #ifdef PLM_DEV_MODE
@@ -141,7 +141,7 @@ void plm_collect_data(void) {
 
     for (uint8_t i = 1; i < NUM_OF_PARAMETERS; i++) {
         CAN_INFO_STRUCT* param = (CAN_INFO_STRUCT*)(PARAMETERS[i]);
-        uint32_t tick = osKernelSysTick();
+        uint32_t tick = HAL_GetTick();
 
         if (param->last_rx > sd_last_log[i]) {
             // parameter has been updated
@@ -173,7 +173,7 @@ void plm_store_data(void) {
     // uses the FatFs driver in FATFS/Target/sd_diskio.c
 	if (usb_connected && fs_ready) {
 #ifdef PLM_DEV_MODE
-	    printf("PLM (%lu): USB connected\n", osKernelSysTick());
+	    printf("PLM (%lu): USB connected\n", HAL_GetTick());
 #endif
         plm_sd_deinit();
         fs_ready = 0;
@@ -249,11 +249,11 @@ void plm_monitor_current(void) {
         if (channel->ampsec_sum > channel->ampsec_max && channel->enabled) {
             // channel has reached Amp*sec threshold, open switch
             HAL_GPIO_WritePin(channel->enable_switch_port, channel->enable_switch_pin, GPIO_PIN_RESET);
-            channel->trip_time = osKernelSysTick();
+            channel->trip_time = HAL_GetTick();
             channel->enabled = 0;
         } else if (!channel->enabled) {
             // check if it's time to re-enable this channel
-            uint32_t ms_since_trip = osKernelSysTick() - channel->trip_time;
+            uint32_t ms_since_trip = HAL_GetTick() - channel->trip_time;
             if (ms_since_trip >= channel->reset_delay_ms) {
                 channel->ampsec_sum = 0;
                 HAL_GPIO_WritePin(channel->enable_switch_port, channel->enable_switch_pin, GPIO_PIN_SET);

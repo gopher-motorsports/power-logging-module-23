@@ -17,7 +17,7 @@ extern RTC_HandleTypeDef hrtc;
 
 PLM_RES plm_sd_init(void) {
 #ifdef PLM_DEV_MODE
-    printf("PLM (%lu): initializing SD card\n", osKernelSysTick());
+    printf("PLM (%lu): initializing SD card\n", HAL_GetTick());
 #endif
 
     // checks that the card is inserted & initializes SD interface
@@ -54,7 +54,7 @@ PLM_RES plm_sd_init(void) {
 
 void plm_sd_deinit(void) {
 #ifdef PLM_DEV_MODE
-    printf("PLM (%lu): de-initializing SD card\n", osKernelSysTick());
+    printf("PLM (%lu): de-initializing SD card\n", HAL_GetTick());
 #endif
 
     // close file and unregister file system

@@ -23,11 +23,11 @@
 
 // ignores voltage check in plm_collect_data
 // terminates the plm_monitor_current thread
-#define PLM_DEV_MODE
+//#define PLM_DEV_MODE
 
 // automatically generates and transmits GCAN data
 // intended for loopback mode
-#define PLM_SIMULATE_DATA
+//#define PLM_SIMULATE_DATA
 
 void plm_init(void);
 void plm_heartbeat(void);

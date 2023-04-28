@@ -46,7 +46,7 @@ static PLM_RES err_state[NUM_OF_LEDS] = {PLM_OK, PLM_OK, PLM_OK, PLM_OK, PLM_OK,
 
 void plm_err_set(PLM_RES code) {
 #ifdef PLM_DEV_MODE
-    printf("ERROR (%lu): code %u set\n", osKernelSysTick(), code);
+    printf("ERROR (%lu): code %u set\n", HAL_GetTick(), code);
 #endif
 
     if (code >= PLM_ERR_SD_INIT && code <= PLM_ERR_SD_WRITE) {
@@ -73,18 +73,18 @@ void plm_err_blink(void) {
             HAL_GPIO_WritePin(led_port[i], led_pin[i], GPIO_PIN_RESET);
         } else if (blinks_remaining == 0) {
             // not ok, start/restart blinking
-            uint32_t tick = osKernelSysTick();
+            uint32_t tick = HAL_GetTick();
             if (tick - last_blink[i] >= ERR_BLINK_DELAY) {
                 blinks_remaining[i] = err_state[i] * 2;
                 HAL_GPIO_WritePin(led_port[i], led_pin[i], GPIO_PIN_SET);
 #ifdef PLM_DEV_MODE
-                printf("ERROR (%lu): code %u active on LED %u\n", osKernelSysTick(), err_state[i], i);
+                printf("ERROR (%lu): code %u active on LED %u\n", HAL_GetTick(), err_state[i], i);
 #endif
                 last_blink[i] = tick;
             }
         } else {
             // continue blinking
-            uint32_t tick = osKernelSysTick();
+            uint32_t tick = HAL_GetTick();
             if (tick - last_blink[i] >= ERR_BLINK_PERIOD) {
                 blinks_remaining[i]--;
                 HAL_GPIO_TogglePin(led_port[i], led_pin[i]);

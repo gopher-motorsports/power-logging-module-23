@@ -222,7 +222,7 @@ PLM_POWER_CHANNEL* POWER_CHANNELS[NUM_OF_CHANNELS] = {
 };
 
 void plm_power_update_channel(PLM_POWER_CHANNEL* channel) {
-    uint32_t tick = osKernelSysTick();
+    uint32_t tick = HAL_GetTick();
     uint32_t elapsed_ms = tick - channel->last_update;
     channel->last_update = tick;
     float delta_max = channel->parameter->data - channel->amp_max;
