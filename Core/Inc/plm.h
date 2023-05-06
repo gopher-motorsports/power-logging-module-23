@@ -29,6 +29,10 @@
 // intended for loopback mode
 //#define PLM_SIMULATE_DATA
 
+// to define which car we are using
+#define GO4_23c
+//#define GO4_23e
+
 void plm_init(void);
 void plm_heartbeat(void);
 void plm_service_can(void);

@@ -2,7 +2,7 @@
 #define GOPHERCAN_CONFIG_H
 
 // RX and TX buffer sizes (bytes)
-#define RX_BUFFER_SIZE 32
+#define RX_BUFFER_SIZE 128
 #define TX_BUFFER_SIZE 32
 
 // number of connected CAN buses (max 3)

@@ -21,6 +21,9 @@
 #include "plm_data.h"
 #include "plm_power.h"
 
+// we might need to turn this up for launch control
+#define CAN_MESSAGE_FORWARD_INTERVAL_ms 50
+
 extern CAN_HandleTypeDef hcan1;
 extern CAN_HandleTypeDef hcan2;
 extern CAN_HandleTypeDef hcan3;
@@ -74,6 +77,9 @@ void plm_init(void) {
         HAL_GPIO_WritePin(channel->enable_switch_port, channel->enable_switch_pin, GPIO_PIN_SET);
     }
 
+    // we dont want to send parameters
+	set_all_param_sending(FALSE);
+
 #ifdef PLM_DEV_MODE
     printf("PLM successfully initialized\n");
 #endif
@@ -97,6 +103,18 @@ void plm_heartbeat(void) {
 }
 
 void plm_service_can(void) {
+
+	// send out messages that need to be forwarded
+#ifdef GO4_23c
+	static U32 last_message_send = 0;
+	if (HAL_GetTick() - last_message_send >= CAN_MESSAGE_FORWARD_INTERVAL_ms)
+	{
+		// send the brake pressure and front wheel speeds to the ECU
+		send_group(0x10);
+		last_message_send = HAL_GetTick();
+	}
+#endif
+
     service_can_tx(&hcan1);
     service_can_tx(&hcan2);
     service_can_tx(&hcan3);
@@ -145,6 +163,13 @@ void plm_collect_data(void) {
 
         if (param->last_rx > sd_last_log[i]) {
             // parameter has been updated
+#ifdef PLM_JANK
+        	// dont log the PLM current channels too fast
+        	if (param->GROUP_ID <= 0x3 && param->last_rx - sd_last_log[i] < 9)
+        	{
+        		continue;
+        	}
+#endif
             PLM_RES res = plm_data_record_param(SD_DB.buffers[SD_DB.write_index], param);
             if (res != PLM_OK) plm_err_set(res);
             sd_last_log[i] = tick;
