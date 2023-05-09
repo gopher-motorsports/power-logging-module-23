@@ -123,6 +123,10 @@ void plm_service_can(void) {
     osDelay(PLM_TASK_DELAY_CAN);
 }
 
+void GCAN_RxMsgPendingCallback(CAN_HandleTypeDef* hcan, U32 rx_mailbox) {
+    service_can_rx_hardware(hcan, rx_mailbox);
+}
+
 void plm_collect_data(void) {
     static uint32_t sd_last_log[NUM_OF_PARAMETERS] = {0};
     static uint32_t xb_last_send[NUM_OF_PARAMETERS] = {0};

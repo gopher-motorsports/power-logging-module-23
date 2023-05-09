@@ -6,6 +6,7 @@
  */
 
 #include "plm_data.h"
+#include "GopherCAN.h"
 
 static uint8_t b1[PLM_SD_BUFFER_SIZE];
 static PLM_BUFFER buffer1 = {
@@ -59,8 +60,11 @@ PLM_RES plm_data_record_param(PLM_BUFFER* buffer, CAN_INFO_STRUCT* param) {
 
     // make sure packet will fit
     uint8_t packet_size = 1 + sizeof(timestamp) + sizeof(id) + param->SIZE + sizeof(checksum);
-    if (packet_size * 2 > buffer->size - buffer->fill)
+    if (packet_size * 2 > buffer->size - buffer->fill) {
+        packetsDropped_ul.data += 1;
+        packetsDropped_ul.info.last_rx = HAL_GetTick();
         return PLM_ERR_BUFFER_FULL;
+    }
 
     // get pointer to data
     switch (param->TYPE) {
@@ -124,6 +128,10 @@ PLM_RES plm_data_record_param(PLM_BUFFER* buffer, CAN_INFO_STRUCT* param) {
 	// NOTE: if there is an escape character in the checksum that is
 	// not counted towards the total checksum
 	append_byte(buffer, checksum);
+
+	packetsLogged_ul.data += 1;
+	packetsLogged_ul.info.last_rx = HAL_GetTick();
+
     return PLM_OK;
 }
 
