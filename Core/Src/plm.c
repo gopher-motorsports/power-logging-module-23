@@ -38,6 +38,10 @@ extern TIM_HandleTypeDef htim10;
 extern PLM_DBL_BUFFER SD_DB;
 extern PLM_DBL_BUFFER XB_DB;
 
+U32 hcan1_rx_callbacks = 0;
+U32 hcan2_rx_callbacks = 0;
+U32 hcan3_rx_callbacks = 0;
+
 void plm_init(void) {
     plm_err_reset();
     S8 err = 0;
@@ -86,14 +90,49 @@ void plm_init(void) {
 }
 
 void plm_heartbeat(void) {
-    static uint32_t last_ex = 0;
     uint32_t tick = HAL_GetTick();
-    if (tick - last_ex >= PLM_DELAY_HEARTBEAT_BLINK) {
-        HAL_GPIO_TogglePin(LED_STATUS_GPIO_Port, LED_STATUS_Pin);
+
+    static uint32_t last_blink = 0;
+    if (tick - last_blink >= PLM_DELAY_HEARTBEAT_BLINK) {
 #ifdef PLM_DEV_MODE
         printf("PLM (%lu): ⚡\n", tick);
 #endif
-        last_ex = tick;
+        HAL_GPIO_TogglePin(LED_STATUS_GPIO_Port, LED_STATUS_Pin);
+        last_blink = tick;
+    }
+
+    static uint32_t last_update = 0;
+    if (tick - last_update >= PLM_DELAY_LOGGING_METRICS) {
+        packetsDropped_ul.info.last_rx = tick;
+        packetsLogged_ul.info.last_rx = tick;
+
+        // SD and Xbee buffer fill %
+        storageBufferFill_percent.data = (float) SD_DB.buffers[SD_DB.write_index]->fill / SD_DB.buffers[SD_DB.write_index]->size * 100.0f;
+        telemetryBufferFill_percent.data = (float) XB_DB.buffers[XB_DB.write_index]->fill / XB_DB.buffers[XB_DB.write_index]->size * 100.0f;
+        storageBufferFill_percent.info.last_rx = tick;
+        telemetryBufferFill_percent.info.last_rx = tick;
+
+        // CAN bus load
+        // does not include messages filtered out by hardware
+        // does not include messages sent by the PLM
+        // assumes all CAN frames are 125 bits (11-bit ID, 8 data bytes, other frame stuff)
+        float hcan1_rx_bps = (hcan1_rx_callbacks * 125) / ((float)(tick - last_update) / 1000.0f);
+        float hcan2_rx_bps = (hcan2_rx_callbacks * 125) / ((float)(tick - last_update) / 1000.0f);
+        float hcan3_rx_bps = (hcan3_rx_callbacks * 125) / ((float)(tick - last_update) / 1000.0f);
+
+        // bus load = sampled bps / 1Mbps
+        can0Utilization_percent.data = hcan1_rx_bps / 1000000.0f * 100.0f;
+        can1Utilization_percent.data = hcan2_rx_bps / 1000000.0f * 100.0f;
+        can2Utilization_percent.data = hcan3_rx_bps / 1000000.0f * 100.0f;
+
+        can0Utilization_percent.info.last_rx = tick;
+        can1Utilization_percent.info.last_rx = tick;
+        can2Utilization_percent.info.last_rx = tick;
+
+        hcan1_rx_callbacks = 0;
+        hcan2_rx_callbacks = 0;
+        hcan3_rx_callbacks = 0;
+        last_update = tick;
     }
 
     // blink any active errors
@@ -103,7 +142,6 @@ void plm_heartbeat(void) {
 }
 
 void plm_service_can(void) {
-
 	// send out messages that need to be forwarded
 #ifdef GO4_23c
 	static U32 last_message_send = 0;
@@ -124,6 +162,10 @@ void plm_service_can(void) {
 }
 
 void GCAN_RxMsgPendingCallback(CAN_HandleTypeDef* hcan, U32 rx_mailbox) {
+    if (hcan->Instance == CAN1) hcan1_rx_callbacks++;
+    else if (hcan->Instance == CAN2) hcan2_rx_callbacks++;
+    else if (hcan->Instance == CAN3) hcan3_rx_callbacks++;
+
     service_can_rx_hardware(hcan, rx_mailbox);
 }
 
@@ -175,7 +217,13 @@ void plm_collect_data(void) {
         	}
 #endif
             PLM_RES res = plm_data_record_param(SD_DB.buffers[SD_DB.write_index], param);
-            if (res != PLM_OK) plm_err_set(res);
+            if (res == PLM_OK) {
+                packetsLogged_ul.data += 1;
+            }
+            else {
+                packetsDropped_ul.data += 1;
+                plm_err_set(res);
+            }
             sd_last_log[i] = tick;
         }
 

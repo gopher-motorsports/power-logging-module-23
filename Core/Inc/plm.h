@@ -20,6 +20,7 @@
 // other delays
 #define PLM_DELAY_RESTART 1000
 #define PLM_DELAY_HEARTBEAT_BLINK 1000
+#define PLM_DELAY_LOGGING_METRICS 1000
 
 // ignores voltage check in plm_collect_data
 // terminates the plm_monitor_current thread
