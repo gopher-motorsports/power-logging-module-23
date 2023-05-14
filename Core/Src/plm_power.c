@@ -233,3 +233,25 @@ void plm_power_update_channel(PLM_POWER_CHANNEL* channel) {
     // bound current integral above 0
     if (channel->ampsec_sum <= 0) channel->ampsec_sum = 0;
 }
+
+void plm_cooling_control(void) {
+    // code to turn off the fans if the wheel speed goes above a threshold
+    if (HAL_GetTick() - wheelSpeedFrontLeft_mph.info.last_rx <= TRUST_VALUE_TIME_DELTA_ms &&
+        HAL_GetTick() - wheelSpeedFrontLeft_mph.info.last_rx <= TRUST_VALUE_TIME_DELTA_ms &&
+        wheelSpeedFrontLeft_mph.data >= WHEEL_SPEED_FAN_OFF_THRESH_mph &&
+        wheelSpeedFrontRight_mph.data >= WHEEL_SPEED_FAN_OFF_THRESH_mph)
+    {
+        // we want to turn off this channel. This is done by manually writing to
+        // the GPIO pin without changing the channel enabled state, meaning the power
+        // logic should still be fine
+        HAL_GPIO_WritePin(EN_12V_0_GPIO_Port, EN_12V_0_Pin, GPIO_PIN_RESET);
+    }
+    else
+    {
+        // fans can be turned back on as long as the channel is enabled
+        if (POWER_CHANNELS[0]->enabled)
+        {
+            HAL_GPIO_WritePin(EN_12V_0_GPIO_Port, EN_12V_0_Pin, GPIO_PIN_SET);
+        }
+    }
+}

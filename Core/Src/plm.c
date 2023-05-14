@@ -24,10 +24,6 @@
 // we might need to turn this up for launch control
 #define CAN_MESSAGE_FORWARD_INTERVAL_ms 50
 
-// cooling control stuff
-#define WHEEL_SPEED_FAN_OFF_THRESH_mph 20.0f
-#define TRUST_VALUE_TIME_DELTA_ms 200
-
 extern CAN_HandleTypeDef hcan1;
 extern CAN_HandleTypeDef hcan2;
 extern CAN_HandleTypeDef hcan3;
@@ -325,25 +321,7 @@ void plm_monitor_current(void) {
 #endif
 
 #ifdef GO4_23c
-	// code to turn off the fans if the wheel speed goes above a threshold
-	if (HAL_GetTick() - wheelSpeedFrontLeft_mph.info.last_rx <= TRUST_VALUE_TIME_DELTA_ms &&
-	    HAL_GetTick() - wheelSpeedFrontLeft_mph.info.last_rx <= TRUST_VALUE_TIME_DELTA_ms &&
-		wheelSpeedFrontLeft_mph.data >= WHEEL_SPEED_FAN_OFF_THRESH_mph &&
-		wheelSpeedFrontRight_mph.data >= WHEEL_SPEED_FAN_OFF_THRESH_mph)
-	{
-		// we want to turn off this channel. This is done by manually writing to
-		// the GPIO pin without changing the channel enabled state, meaning the power
-		// logic should still be fine
-		HAL_GPIO_WritePin(EN_12V_0_GPIO_Port, EN_12V_0_Pin, GPIO_PIN_RESET);
-	}
-	else
-	{
-		// fans can be turned back on as long as the channel is enabled
-		if (POWER_CHANNELS[0]->enabled)
-		{
-			HAL_GPIO_WritePin(EN_12V_0_GPIO_Port, EN_12V_0_Pin, GPIO_PIN_SET);
-		}
-	}
+	plm_cooling_control();
 #endif
 
     for (size_t i = 0; i < NUM_OF_CHANNELS; i++) {
