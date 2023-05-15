@@ -103,6 +103,7 @@ void plm_heartbeat(void) {
     }
 
     plm_update_logging_metrics();
+    plm_sync_rtc();
     plm_err_blink();
 
     osDelay(PLM_TASK_DELAY_HEARTBEAT);

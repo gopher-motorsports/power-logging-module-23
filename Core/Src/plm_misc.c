@@ -10,6 +10,8 @@
 #include "plm_data.h"
 #include "GopherCAN.h"
 
+extern RTC_HandleTypeDef hrtc;
+
 extern PLM_DBL_BUFFER SD_DB;
 extern PLM_DBL_BUFFER XB_DB;
 
@@ -52,5 +54,26 @@ void plm_update_logging_metrics(void) {
         hcan3_rx_callbacks = 0;
 
         last_update = tick;
+    }
+}
+
+void plm_sync_rtc(void) {
+    static uint32_t last_sync = 0;
+    uint32_t tick = HAL_GetTick();
+
+    RTC_TimeTypeDef time;
+    RTC_DateTypeDef date;
+
+    if (tick - last_sync >= PLM_DELAY_SYNC_RTC) {
+        date.Year = gpsYearUTC_ul.data;
+        date.Month = gpsMonthUTC_ul.data;
+        date.Date = gpsDayUTC_ul.data;
+        time.Hours = gpsHoursUTC_ul.data;
+        time.Minutes = gpsMinutesUTC_ul.data;
+        time.Seconds = gpsSecondsUTC_ul.data + (HAL_GetTick() - gpsSecondsUTC_ul.info.last_rx);
+
+        HAL_RTC_SetTime(&hrtc, &time, RTC_FORMAT_BIN);
+        HAL_RTC_SetDate(&hrtc, &date, RTC_FORMAT_BIN);
+        last_sync = tick;
     }
 }
