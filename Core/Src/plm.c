@@ -154,6 +154,7 @@ void plm_service_can(void) {
 		// send the brake pressure and front wheel speeds to the ECU
 		send_group(0x10);
 		send_group(0x600);
+		send_group(0x500);
 		last_message_send = HAL_GetTick();
 	}
 #endif
