@@ -65,12 +65,12 @@ void plm_sync_rtc(void) {
     RTC_DateTypeDef date;
 
     if (tick - last_sync >= PLM_DELAY_SYNC_RTC) {
-        date.Year = gpsYearUTC_ul.data;
+        date.Year = gpsYearUTC_ul.data - 1970;
         date.Month = gpsMonthUTC_ul.data;
         date.Date = gpsDayUTC_ul.data;
         time.Hours = gpsHoursUTC_ul.data;
         time.Minutes = gpsMinutesUTC_ul.data;
-        time.Seconds = gpsSecondsUTC_ul.data + (HAL_GetTick() - gpsSecondsUTC_ul.info.last_rx);
+        time.Seconds = gpsSecondsUTC_ul.data + ((HAL_GetTick() / 1000) - gpsSecondsUTC_ul.info.last_rx);
 
         HAL_RTC_SetTime(&hrtc, &time, RTC_FORMAT_BIN);
         HAL_RTC_SetDate(&hrtc, &date, RTC_FORMAT_BIN);
