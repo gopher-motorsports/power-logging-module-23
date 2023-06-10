@@ -37,8 +37,6 @@ extern USBD_HandleTypeDef hUsbDeviceFS;
 extern ADC_HandleTypeDef hadc1;
 extern ADC_HandleTypeDef hadc3;
 
-extern TIM_HandleTypeDef htim10;
-
 extern PLM_DBL_BUFFER SD_DB;
 extern PLM_DBL_BUFFER XB_DB;
 
@@ -147,17 +145,26 @@ void plm_heartbeat(void) {
 
 void plm_service_can(void) {
 	// send out messages that need to be forwarded
-#ifdef GO4_23c
 	static U32 last_message_send = 0;
 	if (HAL_GetTick() - last_message_send >= CAN_MESSAGE_FORWARD_INTERVAL_ms)
 	{
+#ifdef GO4_23c
 		// send the brake pressure and front wheel speeds to the ECU
 		send_group(0x10);
 		send_group(0x600);
 		send_group(0x500);
-		last_message_send = HAL_GetTick();
-	}
 #endif
+#ifdef GO4_23e
+		send_group(0x3B0);
+		send_group(0x3C0);
+		send_group(0x3C1);
+		send_group(0x3C2);
+		send_group(0x3A7);
+		send_group(0x396);
+		send_group(0x386);
+#endif
+	last_message_send = HAL_GetTick();
+	}
 
     service_can_tx(&hcan1);
     service_can_tx(&hcan2);
