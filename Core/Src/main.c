@@ -181,31 +181,31 @@ int main(void)
 
   /* Create the thread(s) */
   /* definition and creation of PLM_StoreData */
-  osThreadDef(PLM_StoreData, plm_task_store_data, osPriorityNormal, 0, 512);
+  osThreadDef(PLM_StoreData, plm_task_store_data, osPriorityNormal, 0, 1024);
   PLM_StoreDataHandle = osThreadCreate(osThread(PLM_StoreData), NULL);
 
   /* definition and creation of PLM_ServiceCAN */
-  osThreadDef(PLM_ServiceCAN, plm_task_service_can, osPriorityNormal, 0, 512);
+  osThreadDef(PLM_ServiceCAN, plm_task_service_can, osPriorityNormal, 0, 1024);
   PLM_ServiceCANHandle = osThreadCreate(osThread(PLM_ServiceCAN), NULL);
 
   /* definition and creation of PLM_TransmitDat */
-  osThreadDef(PLM_TransmitDat, plm_task_transmit_data, osPriorityNormal, 0, 512);
+  osThreadDef(PLM_TransmitDat, plm_task_transmit_data, osPriorityNormal, 0, 1024);
   PLM_TransmitDatHandle = osThreadCreate(osThread(PLM_TransmitDat), NULL);
 
   /* definition and creation of PLM_Heartbeat */
-  osThreadDef(PLM_Heartbeat, plm_task_heartbeat, osPriorityLow, 0, 256);
+  osThreadDef(PLM_Heartbeat, plm_task_heartbeat, osPriorityLow, 0, 512);
   PLM_HeartbeatHandle = osThreadCreate(osThread(PLM_Heartbeat), NULL);
 
   /* definition and creation of PLM_SimulateDat */
-  osThreadDef(PLM_SimulateDat, plm_task_simulate_data, osPriorityLow, 0, 512);
+  osThreadDef(PLM_SimulateDat, plm_task_simulate_data, osPriorityLow, 0, 1024);
   PLM_SimulateDatHandle = osThreadCreate(osThread(PLM_SimulateDat), NULL);
 
   /* definition and creation of PLM_CollectData */
-  osThreadDef(PLM_CollectData, plm_task_collect_data, osPriorityNormal, 0, 512);
+  osThreadDef(PLM_CollectData, plm_task_collect_data, osPriorityNormal, 0, 1024);
   PLM_CollectDataHandle = osThreadCreate(osThread(PLM_CollectData), NULL);
 
   /* definition and creation of PLM_MonitorCurr */
-  osThreadDef(PLM_MonitorCurr, plm_task_monitor_current, osPriorityNormal, 0, 512);
+  osThreadDef(PLM_MonitorCurr, plm_task_monitor_current, osPriorityNormal, 0, 1024);
   PLM_MonitorCurrHandle = osThreadCreate(osThread(PLM_MonitorCurr), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */

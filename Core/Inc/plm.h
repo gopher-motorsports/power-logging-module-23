@@ -13,14 +13,14 @@
 #define PLM_TASK_DELAY_CAN 1
 #define PLM_TASK_DELAY_DATA 1
 #define PLM_TASK_DELAY_SD 250
-#define PLM_TASK_DELAY_XB 1000
+#define PLM_TASK_DELAY_XB 100
 #define PLM_TASK_DELAY_SIM 5000
 #define PLM_TASK_DELAY_POWER 10
 
 // other delays
 #define PLM_DELAY_RESTART 1000
 #define PLM_DELAY_HEARTBEAT_BLINK 1000
-#define PLM_DELAY_LOGGING_METRICS 1000
+#define PLM_DELAY_LOGGING_METRICS 250
 
 // ignores voltage check in plm_collect_data
 // terminates the plm_monitor_current thread

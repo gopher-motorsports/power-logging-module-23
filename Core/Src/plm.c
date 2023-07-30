@@ -162,8 +162,9 @@ void plm_service_can(void) {
 		send_group(0x3A7);
 		send_group(0x396);
 		send_group(0x386);
+		send_group(0x003);
 #endif
-	last_message_send = HAL_GetTick();
+		last_message_send = HAL_GetTick();
 	}
 
     service_can_tx(&hcan1);
@@ -216,7 +217,7 @@ void plm_collect_data(void) {
         taskEXIT_CRITICAL();
     }
 
-    for (uint8_t i = 1; i < NUM_OF_PARAMETERS; i++) {
+    for (uint16_t i = 1; i < NUM_OF_PARAMETERS; i++) {
         CAN_INFO_STRUCT* param = (CAN_INFO_STRUCT*)(PARAMETERS[i]);
         uint32_t tick = HAL_GetTick();
 
@@ -224,7 +225,7 @@ void plm_collect_data(void) {
             // parameter has been updated
 #ifdef PLM_JANK
         	// dont log the PLM current channels too fast
-        	if (param->GROUP_ID <= 0x3 && param->last_rx - sd_last_log[i] < 9)
+        	if (param->GROUP_ID <= 0x5 && param->last_rx - sd_last_log[i] < 9)
         	{
         		continue;
         	}
