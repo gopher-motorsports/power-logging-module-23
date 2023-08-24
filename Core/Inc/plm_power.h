@@ -16,6 +16,10 @@
 #define MIN_5V_VOLTAGE_V 2.0f
 #define MIN_VBAT_VOLTAGE_V 2.0f
 
+// cooling control stuff
+#define WHEEL_SPEED_FAN_OFF_THRESH_mph 20.0f
+#define TRUST_VALUE_TIME_DELTA_ms 200
+
 typedef struct {
     FLOAT_CAN_STRUCT* parameter;
     GPIO_TypeDef* enable_switch_port;
@@ -32,5 +36,6 @@ typedef struct {
 extern PLM_POWER_CHANNEL* POWER_CHANNELS[NUM_OF_CHANNELS];
 
 void plm_power_update_channel(PLM_POWER_CHANNEL* channel);
+void plm_cooling_control(void);
 
 #endif /* INC_PLM_POWER_H_ */
