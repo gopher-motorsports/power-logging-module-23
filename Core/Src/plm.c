@@ -163,6 +163,7 @@ void plm_service_can(void) {
 		send_group(0x396);
 		send_group(0x386);
 		send_group(0x003);
+        send_group(0x550);
 #endif
 		last_message_send = HAL_GetTick();
 	}
