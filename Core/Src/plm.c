@@ -115,6 +115,8 @@ void plm_service_can(void) {
 #ifdef GO4_23c
 		// send rear sensor hubs and other parameters on other buses for display
 		send_group(0x10);
+		send_group(0x100);
+		send_group(0x601);
 		send_group(0x500);
 		send_group(0x550);
 		send_group(0x600);
